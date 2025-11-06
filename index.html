@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Hydration & Creatine Tracker</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app-container">
+        <header role="banner" aria-label="App header">
+            <h1>Hydration + Creatine</h1>
+            <nav id="app-nav" role="navigation" aria-label="Primary">
+                <button type="button" data-index="0" aria-controls="hydration-page" class="nav-btn">💧</button>
+                <button type="button" data-index="1" aria-controls="creatine-page" class="nav-btn">💊</button>
+                <button type="button" data-index="2" aria-controls="history-page" class="nav-btn">📜</button>
+            </nav>
+        </header>
+
+        <main id="main-content" role="main">
+            <div id="tracker-page-container" aria-live="polite">
+                <section id="hydration-page" class="tracker-module" aria-label="Hydration page">
+                    <h2>Hydration</h2>
+                    <div class="hydration-status-area">
+                        <div class="circular-progress-ring" aria-hidden="true">
+                            <div id="liter-count">0.0L</div>
+                        </div>
+
+                        <div class="goal-setting" aria-labelledby="hydration-goal-label">
+                            <label id="hydration-goal-label" for="hydration-goal-input" class="sr-only">Daily goal (liters)</label>
+                            <input id="hydration-goal-input" type="number" step="0.1" min="0" value="2.0" />
+                            <span> L goal</span>
+                        </div>
+
+                        <div class="logging-buttons" role="group" aria-label="Log water">
+                            <button type="button" data-add="0.25">+250ml</button>
+                            <button type="button" data-add="0.5">+500ml</button>
+                            <button type="button" data-add="1">+1L</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="creatine-page" class="tracker-module" aria-label="Creatine page">
+                    <h2>Creatine</h2>
+                    <div class="creatine-status-area">
+                        <button id="creatine-log-btn" type="button">Log Creatine</button>
+                    </div>
+                </section>
+
+                <section id="history-page" class="tracker-module" aria-label="History page">
+                    <h2>History</h2>
+                    <div class="overview-stats">Summary</div>
+                    <ul id="history-list" aria-live="polite"></ul>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script src="scripts.js" defer></script>
+</body>
+</html>

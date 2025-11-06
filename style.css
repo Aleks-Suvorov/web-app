@@ -1,0 +1,192 @@
+/* style.css - cleaned, robust and accessible */
+
+/* VARIABLES */
+:root {
+    --color-primary: #00838f;
+    --color-secondary: #00bcd4;
+    --color-success: #4caf50;
+    --color-background: #f4f4f9;
+    --color-card: #ffffff;
+    --color-text: #333333;
+    --font-stack: 'Helvetica Neue', Arial, sans-serif;
+    --header-height: 80px;
+    --max-content-width: 420px;
+    --gap: 16px;
+}
+
+/* RESET */
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+    margin: 0;
+    font-family: var(--font-stack);
+    background: var(--color-background);
+    color: var(--color-text);
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    overflow-x: hidden;
+}
+
+/* APP LAYOUT */
+#app-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* HEADER */
+header {
+    background: var(--color-card);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    height: var(--header-height);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 8px 12px;
+}
+
+h1 {
+    margin: 0;
+    font-size: 1.15rem;
+    color: var(--color-primary);
+    text-align: center;
+    line-height: 1;
+}
+
+#app-nav {
+    display: flex;
+    justify-content: space-around;
+    gap: 8px;
+    padding-top: 6px;
+}
+
+#app-nav .nav-btn {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 6px 12px;
+    border-radius: 8px;
+}
+#app-nav .nav-btn.active,
+#app-nav .nav-btn:focus {
+    color: var(--color-secondary);
+    outline: none;
+    box-shadow: inset 0 -3px 0 var(--color-secondary);
+}
+
+/* MAIN / PAGES */
+#main-content {
+    flex: 1 1 auto;
+    min-height: calc(100vh - var(--header-height));
+    display: block;
+    overflow: hidden;
+}
+
+/* PAGE CONTAINER - uses horizontal flex for swipe/translate */
+#tracker-page-container {
+    display: flex;
+    width: 300vw; /* 3 pages */
+    height: 100%;
+    transition: transform 0.32s cubic-bezier(.2,.8,.2,1);
+    will-change: transform;
+}
+
+/* INDIVIDUAL PAGE */
+.tracker-module {
+    width: 100vw;
+    height: 100%;
+    flex: 0 0 100vw;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    box-sizing: border-box;
+    gap: var(--gap);
+    background: transparent;
+}
+
+/* ensure content doesn't overflow behind header */
+.tracker-module > * { max-width: var(--max-content-width); width: 100%; }
+
+/* VISIBILITY HELPERS (if JS toggles visibility) */
+.active-page { display: flex !important; }
+.hidden-page { display: none !important; }
+
+/* CONTENT SPECIFIC */
+.hydration-status-area, .creatine-status-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+}
+
+.goal-setting { display:flex; gap:10px; align-items:center; justify-content:center; }
+#hydration-goal-input {
+    width: 80px;
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #dcdcdc;
+    text-align: center;
+}
+
+/* circular ring */
+.circular-progress-ring {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: var(--color-card);
+    border: 8px solid var(--color-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    margin: 8px 0;
+}
+#liter-count { font-size: 1.6rem; color: var(--color-primary); font-weight:700; }
+
+/* buttons */
+button {
+    font: inherit;
+    cursor: pointer;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 12px;
+    background: var(--color-secondary);
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    transition: transform .08s ease, opacity .12s ease;
+}
+button:active { transform: scale(.98); }
+button:focus { outline: 3px solid rgba(0,188,212,0.12); outline-offset: 2px; }
+
+.logging-buttons { display:flex; gap:10px; width:100%; justify-content:space-between; }
+.logging-buttons button { flex:1 1 30%; min-width: 78px; }
+
+/* creatine */
+#creatine-log-btn { max-width: 320px; font-weight:700; padding:14px 16px; background:#b0bec5; }
+#creatine-log-btn.logged-status { background: var(--color-success); }
+
+/* history */
+#history-list { list-style: none; padding: 0; margin: 0; width:100%; }
+#history-list li { display:flex; justify-content:space-between; gap:10px; padding:10px 0; border-bottom:1px dashed #eee; color:#555; font-size:0.9rem; }
+
+/* utility */
+.sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
+
+/* reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    #tracker-page-container { transition: none; }
+}
+
+/* responsive tweaks */
+@media (min-width: 820px) {
+    :root { --max-content-width: 600px; }
+    .circular-progress-ring { width: 240px; height: 240px; }
+}
