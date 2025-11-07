@@ -1,60 +1,122 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Hydration & Creatine Tracker</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Oasis Health Tracker</title>
+    <meta name="description" content="A premium tracker for hydration, supplements, and health progress.">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
     <link rel="stylesheet" href="style.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <link rel="apple-touch-icon" href="favicon.png">
+    <meta name="apple-mobile-web-app-title" content="Oasis">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
 </head>
 <body>
-    <div id="app-container">
-        <header role="banner" aria-label="App header">
-            <h1>Hydration + Creatine</h1>
-            <nav id="app-nav" role="navigation" aria-label="Primary">
-                <button type="button" data-index="0" aria-controls="hydration-page" class="nav-btn">💧</button>
-                <button type="button" data-index="1" aria-controls="creatine-page" class="nav-btn">💊</button>
-                <button type="button" data-index="2" aria-controls="history-page" class="nav-btn">📜</button>
+
+    <main id="app-container">
+        
+        <header>
+            <h1 class="logo-text">Oasis Tracker</h1>
+            <nav id="app-nav">
+                <button data-page="hydration-tracker" class="active"><i class="fa-solid fa-droplet"></i></button>
+                <button data-page="creatine-tracker"><i class="fa-solid fa-pills"></i></button>
+                <button data-page="history-page"><i class="fa-solid fa-chart-line"></i></button>
             </nav>
         </header>
 
-        <main id="main-content" role="main">
-            <div id="tracker-page-container" aria-live="polite">
-                <section id="hydration-page" class="tracker-module" aria-label="Hydration page">
-                    <h2>Hydration</h2>
-                    <div class="hydration-status-area">
-                        <div class="circular-progress-ring" aria-hidden="true">
-                            <div id="liter-count">0.0L</div>
-                        </div>
-
-                        <div class="goal-setting" aria-labelledby="hydration-goal-label">
-                            <label id="hydration-goal-label" for="hydration-goal-input" class="sr-only">Daily goal (liters)</label>
-                            <input id="hydration-goal-input" type="number" step="0.1" min="0" value="2.0" />
-                            <span> L goal</span>
-                        </div>
-
-                        <div class="logging-buttons" role="group" aria-label="Log water">
-                            <button type="button" data-add="0.25">+250ml</button>
-                            <button type="button" data-add="0.5">+500ml</button>
-                            <button type="button" data-add="1">+1L</button>
-                        </div>
+        <div id="tracker-page-container">
+            
+            <section id="hydration-tracker" class="tracker-module">
+                
+                <div class="card primary-card">
+                    <h2 class="card-title">Daily Hydration Goal</h2>
+                    
+                    <div class="circular-progress-ring">
+                        <span id="liter-count">0.0 L / 3.7 L</span>
+                        <span class="percentage-text">0% Complete</span>
                     </div>
-                </section>
 
-                <section id="creatine-page" class="tracker-module" aria-label="Creatine page">
-                    <h2>Creatine</h2>
+                    <div class="goal-setting">
+                        <label for="hydration-goal-input">Target (Liters):</label>
+                        <input type="number" id="hydration-goal-input" min="0.1" step="0.1" value="3.7">
+                    </div>
+                </div>
+
+                <div class="card secondary-card log-card">
+                    <h3 class="card-title">Log Intake</h3>
+                    <div class="logging-buttons">
+                        <button data-amount="0.25">250 ml</button>
+                        <button data-amount="0.5">500 ml</button>
+                        <button data-amount="1.0">1.0 L</button>
+                    </div>
+                </div>
+                
+                <div class="card info-card">
+                    <p class="small-note">💧 **Oasis Tip:** Achieving your daily goal improves skin elasticity and focus!</p>
+                </div>
+            </section>
+
+            <section id="creatine-tracker" class="tracker-module">
+                
+                <div class="card primary-card supplement-card">
+                    <h2 class="card-title">Creatine Monohydrate</h2>
+                    
                     <div class="creatine-status-area">
-                        <button id="creatine-log-btn" type="button">Log Creatine</button>
+                        <button id="creatine-log-btn" class="cta-button">
+                            Log Creatine Serving (5g)
+                        </button>
+                        <p id="creatine-status-text" class="status-display">0 Serving(s) Logged (0g Total)</p>
                     </div>
-                </section>
+                </div>
+                
+                <div class="card secondary-card dosage-card">
+                    <h3 class="card-title">Dosage Information</h3>
+                    <div class="detail-row">
+                        <span class="detail-label">Standard Dose:</span>
+                        <span class="detail-value">5 grams</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Maximum Dose:</span>
+                        <span class="detail-value">20 grams (4 Servings)</span>
+                    </div>
+                    <p class="small-note">Consult your physician before starting any new supplement regimen.</p>
+                </div>
+            </section>
 
-                <section id="history-page" class="tracker-module" aria-label="History page">
-                    <h2>History</h2>
-                    <div class="overview-stats">Summary</div>
-                    <ul id="history-list" aria-live="polite"></ul>
-                </section>
-            </div>
-        </main>
-    </div>
+            <section id="history-page" class="tracker-module">
+                
+                <div class="card primary-card stats-card">
+                    <h2 class="card-title">Your Oasis Performance</h2>
+                    
+                    <div class="overview-stats">
+                        <div class="stat-box">
+                            <span id="avg-liters" class="stat-value">--</span>
+                            <span class="stat-label">Avg. Daily Liters</span>
+                        </div>
+                        <div class="stat-box">
+                            <span id="creatine-consistency" class="stat-value">--</span>
+                            <span class="stat-label">Consistency</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card secondary-card history-list-card">
+                    <h3 class="card-title">Recent Activity</h3>
+                    <ul id="history-list">
+                        <li class="loading-message">Loading history...</li>
+                    </ul>
+                </div>
+            </section>
+
+        </div> 
+    </main>
 
     <script src="scripts.js" defer></script>
 </body>
