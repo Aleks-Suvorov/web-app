@@ -1,192 +1,359 @@
-/* style.css - cleaned, robust and accessible */
+/* ====================================================================
+   style.css - Oasis FINAL Production Style (Master File)
+   - Uses Inter font, luxury color palette, and is optimized for flow.
+   ==================================================================== */
 
-/* VARIABLES */
+/* 1. CSS VARIABLES (The Core Oasis Palette & Weights) */
 :root {
-    --color-primary: #00838f;
-    --color-secondary: #00bcd4;
-    --color-success: #4caf50;
-    --color-background: #f4f4f9;
-    --color-card: #ffffff;
-    --color-text: #333333;
-    --font-stack: 'Helvetica Neue', Arial, sans-serif;
-    --header-height: 80px;
-    --max-content-width: 420px;
-    --gap: 16px;
+    /* --- Oasis Color Palette --- */
+    --color-primary: #015486;        /* Navy Blue - Headings, Main text, Dark elements */
+    --color-accent: #34b8e6;         /* Sky Blue - Buttons, active states, progress indicators */
+    --color-success: #79c743;        /* Lime Green - Positive feedback, goal met */
+    --color-background: #F4F6F9;     /* Soft Gray - App background */
+    --color-surface: #FFFFFF;        /* White - Card backgrounds */
+    --color-text-dark: #1A202C;      /* Primary readable text */
+    --color-text-muted: #8892B0;     /* Secondary text, labels, notes */
+    
+    /* --- Spacing & UI --- */
+    --spacing-xs: 5px;
+    --spacing-sm: 10px;
+    --spacing-md: 15px; 
+    --spacing-lg: 20px;
+    --border-radius-sm: 8px;
+    --border-radius-md: 12px;
+    --shadow-heavy: 0 8px 20px rgba(0, 0, 0, 0.1); 
+    
+    /* --- TYPOGRAPHY STACK & WEIGHTS --- */
+    --font-stack: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+    --weight-regular: 400;
+    --weight-medium: 500; 
+    --weight-semi-bold: 600;
+    --weight-bold: 700;
 }
 
-/* RESET */
-* { box-sizing: border-box; }
-html, body { height: 100%; }
-body {
+/* 2. GLOBAL RESET AND BASE LAYOUT */
+* {
+    box-sizing: border-box;
     margin: 0;
-    font-family: var(--font-stack);
-    background: var(--color-background);
-    color: var(--color-text);
-    -webkit-font-smoothing:antialiased;
-    -moz-osx-font-smoothing:grayscale;
-    overflow-x: hidden;
+    padding: 0;
 }
 
-/* APP LAYOUT */
+body, html {
+    font-family: var(--font-stack);
+    background-color: var(--color-background);
+    color: var(--color-text-dark);
+    height: 100vh;
+    overflow-x: hidden;
+    font-weight: var(--weight-medium); /* Default body text is Medium */
+}
+
 #app-container {
-    min-height: 100vh;
+    height: 100%;
     display: flex;
     flex-direction: column;
 }
 
-/* HEADER */
+
+/* 3. HEADER AND NAVIGATION */
 header {
-    background: var(--color-card);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+    background-color: var(--color-surface);
+    box-shadow: var(--shadow-heavy);
     position: sticky;
     top: 0;
-    z-index: 20;
-    height: var(--header-height);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 8px 12px;
+    z-index: 10;
+    flex-shrink: 0; 
 }
 
-h1 {
-    margin: 0;
-    font-size: 1.15rem;
-    color: var(--color-primary);
+h1.logo-text {
     text-align: center;
-    line-height: 1;
+    padding: var(--spacing-sm) 0 var(--spacing-xs);
+    font-size: 26px;
+    font-weight: var(--weight-bold);
+    color: var(--color-primary);
 }
 
 #app-nav {
     display: flex;
     justify-content: space-around;
-    gap: 8px;
-    padding-top: 6px;
+    padding: var(--spacing-xs) 0 var(--spacing-sm);
 }
 
-#app-nav .nav-btn {
+#app-nav button {
     background: none;
     border: none;
-    color: #888;
-    font-size: 1.2rem;
-    cursor: pointer;
-    padding: 6px 12px;
-    border-radius: 8px;
-}
-#app-nav .nav-btn.active,
-#app-nav .nav-btn:focus {
-    color: var(--color-secondary);
-    outline: none;
-    box-shadow: inset 0 -3px 0 var(--color-secondary);
+    font-size: 24px;
+    color: var(--color-text-muted);
+    padding: 5px var(--spacing-md);
+    transition: color 0.2s, border-bottom 0.2s;
 }
 
-/* MAIN / PAGES */
-#main-content {
-    flex: 1 1 auto;
-    min-height: calc(100vh - var(--header-height));
-    display: block;
-    overflow: hidden;
+#app-nav button.active {
+    color: var(--color-accent);
+    border-bottom: 3px solid var(--color-accent);
 }
 
-/* PAGE CONTAINER - uses horizontal flex for swipe/translate */
+
+/* 4. CORE PAGE SWIPE LAYOUT */
 #tracker-page-container {
     display: flex;
-    width: 300vw; /* 3 pages */
-    height: 100%;
-    transition: transform 0.32s cubic-bezier(.2,.8,.2,1);
-    will-change: transform;
+    width: 300vw;
+    transition: transform 0.3s ease-in-out;
+    flex-grow: 1;
 }
 
-/* INDIVIDUAL PAGE */
 .tracker-module {
     width: 100vw;
-    height: 100%;
-    flex: 0 0 100vw;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
+    flex-shrink: 0;
+    padding: var(--spacing-md) var(--spacing-sm); /* Tighter vertical flow */
     box-sizing: border-box;
-    gap: var(--gap);
-    background: transparent;
-}
-
-/* ensure content doesn't overflow behind header */
-.tracker-module > * { max-width: var(--max-content-width); width: 100%; }
-
-/* VISIBILITY HELPERS (if JS toggles visibility) */
-.active-page { display: flex !important; }
-.hidden-page { display: none !important; }
-
-/* CONTENT SPECIFIC */
-.hydration-status-area, .creatine-status-area {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 12px;
-    width: 100%;
+    min-height: 100%;
 }
 
-.goal-setting { display:flex; gap:10px; align-items:center; justify-content:center; }
-#hydration-goal-input {
-    width: 80px;
-    padding: 8px;
-    border-radius: 6px;
-    border: 1px solid #dcdcdc;
+
+/* 5. CORE COMPONENTS & UTILITIES (Cards and Buttons) */
+.card {
+    background-color: var(--color-surface);
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-sm); /* Tight spacing between cards */
+    box-shadow: var(--shadow-heavy);
+    width: 100%;
+    max-width: 420px;
     text-align: center;
 }
 
-/* circular ring */
-.circular-progress-ring {
-    width: 200px;
-    height: 200px;
-    border-radius: 50%;
-    background: var(--color-card);
-    border: 8px solid var(--color-secondary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
-    margin: 8px 0;
+.card-title {
+    color: var(--color-primary);
+    font-size: 1.25em;
+    font-weight: var(--weight-bold);
+    margin-top: 0;
+    margin-bottom: var(--spacing-lg);
 }
-#liter-count { font-size: 1.6rem; color: var(--color-primary); font-weight:700; }
 
-/* buttons */
 button {
-    font: inherit;
-    cursor: pointer;
+    padding: 14px var(--spacing-lg);
     border: none;
-    border-radius: 10px;
-    padding: 10px 12px;
-    background: var(--color-secondary);
-    color: #fff;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-    transition: transform .08s ease, opacity .12s ease;
-}
-button:active { transform: scale(.98); }
-button:focus { outline: 3px solid rgba(0,188,212,0.12); outline-offset: 2px; }
-
-.logging-buttons { display:flex; gap:10px; width:100%; justify-content:space-between; }
-.logging-buttons button { flex:1 1 30%; min-width: 78px; }
-
-/* creatine */
-#creatine-log-btn { max-width: 320px; font-weight:700; padding:14px 16px; background:#b0bec5; }
-#creatine-log-btn.logged-status { background: var(--color-success); }
-
-/* history */
-#history-list { list-style: none; padding: 0; margin: 0; width:100%; }
-#history-list li { display:flex; justify-content:space-between; gap:10px; padding:10px 0; border-bottom:1px dashed #eee; color:#555; font-size:0.9rem; }
-
-/* utility */
-.sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
-
-/* reduced motion */
-@media (prefers-reduced-motion: reduce) {
-    #tracker-page-container { transition: none; }
+    border-radius: var(--border-radius-sm);
+    font-weight: var(--weight-semi-bold);
+    transition: background-color 0.2s, transform 0.1s, box-shadow 0.2s;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
-/* responsive tweaks */
-@media (min-width: 820px) {
-    :root { --max-content-width: 600px; }
-    .circular-progress-ring { width: 240px; height: 240px; }
+/* Informational Card Styling */
+.info-card {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-accent);
+    padding: var(--spacing-md);
+    text-align: left;
+    margin-top: var(--spacing-md); 
+}
+.info-card .small-note {
+    font-size: 0.9em;
+    font-weight: var(--weight-medium);
+    color: var(--color-text-dark);
+}
+.small-note {
+    font-size: 0.85em;
+    color: var(--color-text-muted);
+    font-weight: var(--weight-regular);
+    margin-top: var(--spacing-sm);
+}
+
+
+/* 6. HYDRATION TRACKER SPECIFIC STYLING (Flow Fixes Implemented) */
+.primary-card { 
+    padding-bottom: var(--spacing-sm); /* Tighter padding */
+}
+
+.goal-setting { /* Integrated into the card flow */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: var(--spacing-sm) 0; 
+    border-top: 1px solid var(--color-background); 
+    margin-top: var(--spacing-md);
+    font-weight: var(--weight-medium);
+    font-size: 0.9em;
+}
+
+.goal-setting input[type="number"] {
+    width: 80px; 
+    text-align: right;
+    font-weight: var(--weight-semi-bold);
+    padding: 5px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+
+.circular-progress-ring {
+    width: 170px; 
+    height: 170px;
+    border-radius: 50%;
+    background: var(--color-background);
+    border: 8px solid var(--color-accent);
+    box-shadow: var(--shadow-heavy);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 0; 
+}
+
+#liter-count {
+    font-size: 2.2em; 
+    font-weight: var(--weight-semi-bold); /* The weight fix */
+    line-height: 1.1;
+    color: var(--color-primary);
+}
+
+.percentage-text {
+    font-size: 0.9em;
+    color: var(--color-text-muted);
+    font-weight: var(--weight-regular);
+    margin-top: 5px;
+}
+
+.goal-achieved {
+    color: var(--color-success) !important;
+}
+
+.logging-buttons {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+    width: 100%;
+}
+
+.logging-buttons button {
+    background-color: var(--color-accent);
+    color: white;
+    flex: 1 1 calc(33% - var(--spacing-sm));
+    padding: 12px 5px;
+    font-size: 0.9em;
+    box-shadow: 0 5px 12px rgba(52, 184, 230, 0.4);
+}
+
+
+/* 7. CREATINE TRACKER SPECIFIC STYLING */
+.creatine-status-area {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#creatine-log-btn.cta-button {
+    width: 100%;
+    padding: 20px;
+    margin: var(--spacing-lg) 0;
+    background-color: var(--color-accent);
+    color: white;
+    font-size: 1.1em;
+    font-weight: var(--weight-bold);
+    box-shadow: 0 8px 20px rgba(52, 184, 230, 0.4);
+}
+
+#creatine-log-btn.logged-status {
+    background-color: var(--color-success);
+    box-shadow: 0 8px 20px rgba(121, 199, 67, 0.4);
+}
+
+.status-display {
+    font-weight: var(--weight-semi-bold);
+    color: var(--color-primary);
+}
+
+/* Dosage Details Card Styling */
+.dosage-card {
+    text-align: left;
+}
+.dosage-card .card-title {
+    margin-bottom: var(--spacing-md);
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--color-background);
+    font-weight: var(--weight-medium);
+}
+
+.detail-label {
+    color: var(--color-text-muted);
+}
+
+.detail-value {
+    font-weight: var(--weight-semi-bold);
+    color: var(--color-primary);
+}
+
+
+/* 8. HISTORY PAGE SPECIFIC STYLING */
+#history-page {
+    align-items: flex-start;
+}
+
+.overview-stats {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    text-align: center;
+    width: 100%;
+    margin-top: 0;
+    margin-bottom: var(--spacing-md);
+}
+
+.stat-box {
+    padding: var(--spacing-sm);
+    flex: 1;
+    border-right: 1px solid var(--color-background); 
+}
+.stat-box:last-child {
+    border-right: none;
+}
+
+.stat-value {
+    display: block;
+    font-size: 2.2em;
+    font-weight: var(--weight-semi-bold);
+    color: var(--color-accent);
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.85em;
+    color: var(--color-text-muted);
+    font-weight: var(--weight-regular);
+    margin-top: 3px;
+}
+
+.history-list-card {
+    width: 100%;
+    max-width: 420px;
+    padding: var(--spacing-md); 
+}
+
+#history-list li {
+    background-color: var(--color-surface);
+    border-radius: var(--border-radius-sm);
+    padding: var(--spacing-sm);
+    margin-bottom: 6px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    font-size: 0.9em;
+    font-weight: var(--weight-regular);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap; 
+    gap: var(--spacing-sm);
+}
+
+#history-list li span:first-child { 
+    font-weight: var(--weight-semi-bold);
+    color: var(--color-primary);
 }
