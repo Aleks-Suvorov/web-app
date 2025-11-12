@@ -182,7 +182,7 @@ function updateHistoryDisplay() {
         lastSevenDays.forEach(record => {
             const goal = parseFloat(localStorage.getItem('hydrationGoalLiters') || DEFAULT_GOAL_LITERS);
             const hydrationStatus = (record.litersLogged >= goal) ? 'Goal Met ✅' : 'Below Goal ⚠️';
-            const creatineStatus = (record.creatineServings >= 1) ? `${record.creatineServings} Serving(s) 💊` : 'None Logged';
+            const creatineStatus = (record.creatineServings >= 1) ? `${record.creatineServings} Serving(s) ` : 'None Logged';
 
             const listItem = document.createElement('li');
             listItem.innerHTML = `

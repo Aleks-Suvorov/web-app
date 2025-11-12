@@ -294,10 +294,10 @@ button {
 
 
 /* 8. HISTORY PAGE SPECIFIC STYLING */
-#history-page {
-    align-items: flex-start;
+#history-page{ 
+    align-items: center; 
+    padding-top: var(--spacing-md);
 }
-
 .overview-stats {
     display: flex;
     justify-content: space-around;
