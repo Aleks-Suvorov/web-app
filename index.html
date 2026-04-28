@@ -1,123 +1,519 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Oasis Health Tracker</title>
-    <meta name="description" content="A premium tracker for hydration, supplements, and health progress.">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    
+    <meta name="description" content="Premium health tracking for hydration, creatine, and supplements.">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <link rel="stylesheet" href="style.css">
-
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="icon" type="image/png" href="favicon.png" />
     <link rel="apple-touch-icon" href="favicon.png">
     <meta name="apple-mobile-web-app-title" content="Oasis">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#015486">
 </head>
 <body>
+<div id="app">
 
-    <main id="app-container">
-        
-        <header>
-            <h1 class="logo-text">Oasis Health Tracker </h1>
-            <nav id="app-nav">
-                <button data-page="hydration-tracker" class="active"><i class="fa-solid fa-droplet"></i></button>
-                <button data-page="creatine-tracker"><i class="fa-solid fa-pills"></i></button>
-                <button data-page="history-page"><i class="fa-solid fa-chart-line"></i></button>
-            </nav>
-        </header>
+    <!-- HEADER -->
+    <header id="app-header">
+        <div class="header-left">
+            <span class="logo-wave">💧</span>
+            <span class="logo-text">Oasis</span>
+        </div>
+        <div class="header-right">
+            <div id="streak-pill" class="streak-pill">
+                <i class="fa-solid fa-fire"></i>
+                <span id="header-streak">0</span>
+            </div>
+            <button id="dark-mode-toggle" class="icon-btn" title="Toggle dark mode">
+                <i class="fa-solid fa-moon" id="dark-icon"></i>
+            </button>
+        </div>
+    </header>
 
-        <div id="tracker-page-container">
-            
-            <section id="hydration-tracker" class="tracker-module">
-                
-                <div class="card primary-card">
-                    <h2 class="card-title">Daily Hydration Goal</h2>
-                    
-                    <div class="circular-progress-ring">
-                        <span id="liter-count">0.0 L / 3.7 L</span>
-                        <span class="percentage-text">0% Complete</span>
+    <!-- MAIN PAGES -->
+    <main id="page-container">
+
+        <!-- ═══════════════════════════════════════
+             PAGE 1 · DASHBOARD
+        ═══════════════════════════════════════ -->
+        <section id="page-dashboard" class="page active">
+            <div class="page-scroll">
+
+                <div class="greeting-block">
+                    <h2 id="greeting-text">Good morning!</h2>
+                    <p id="greeting-date" class="text-muted"></p>
+                </div>
+
+                <!-- Today Summary Cards -->
+                <div class="summary-row">
+                    <div class="summary-card water-card" data-nav="page-hydration">
+                        <div class="sc-top">
+                            <span class="sc-icon">💧</span>
+                            <div class="sc-mini-ring">
+                                <svg width="48" height="48" viewBox="0 0 48 48">
+                                    <circle cx="24" cy="24" r="19" class="mini-ring-bg"/>
+                                    <circle cx="24" cy="24" r="19" id="dash-water-ring"
+                                        class="mini-ring-fill mini-ring-water"
+                                        stroke-dasharray="119.4" stroke-dashoffset="119.4"
+                                        transform="rotate(-90 24 24)"/>
+                                </svg>
+                                <span id="dash-water-pct" class="mini-ring-label">0%</span>
+                            </div>
+                        </div>
+                        <span id="dash-water-val" class="sc-value">0.0 L</span>
+                        <span class="sc-label">Hydration</span>
                     </div>
-
-                    <div class="goal-setting">
-                        <label for="hydration-goal-input">Target (Liters):</label>
-                        <input type="number" id="hydration-goal-input" min="0.1" step="0.1" value="3.7">
+                    <div class="summary-card creatine-card" data-nav="page-supplements">
+                        <div class="sc-top">
+                            <span class="sc-icon">💊</span>
+                            <div id="creatine-dot" class="status-dot dot-off"></div>
+                        </div>
+                        <span id="dash-creatine-val" class="sc-value">0 g</span>
+                        <span class="sc-label">Creatine</span>
                     </div>
                 </div>
 
-                <div class="card secondary-card log-card">
-                    <h3 class="card-title">Log Intake</h3>
-                    <div class="logging-buttons">
-                        <button data-amount="0.25">250 ml</button>
-                        <button data-amount="0.5">500 ml</button>
-                        <button data-amount="1.0">1.0 L</button>
+                <!-- Streaks -->
+                <div class="streaks-row">
+                    <div class="streak-tile">
+                        <div class="streak-num" id="st-hydration">0</div>
+                        <div class="streak-lbl">💧 Streak</div>
+                    </div>
+                    <div class="streak-tile">
+                        <div class="streak-num" id="st-creatine">0</div>
+                        <div class="streak-lbl">💊 Streak</div>
+                    </div>
+                    <div class="streak-tile">
+                        <div class="streak-num" id="st-days">0</div>
+                        <div class="streak-lbl">📅 Days</div>
                     </div>
                 </div>
-                
-                <div class="card info-card">
-                    <p class="small-note">💧 Hydration Tip:  It's recommended to drink 3 to 4 liters of water daily to support creatine effectiveness and overall hydration per 5g.</p>
-                </div>
-            </section>
 
-            <section id="creatine-tracker" class="tracker-module">
-                
-                <div class="card primary-card supplement-card">
-                    <h2 class="card-title">Creatine Monohydrate</h2>
-                    
-                    <div class="creatine-status-area">
-                        <button id="creatine-log-btn" class="cta-button">
-                            Log Creatine Serving (5g)
+                <!-- Quick Log -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Quick Log</h3>
+                    </div>
+                    <div class="quick-grid">
+                        <button class="quick-btn" data-amount="0.25" data-type="water">
+                            <span class="qb-icon">🥛</span>
+                            <span class="qb-name">Glass</span>
+                            <span class="qb-amt">250 ml</span>
                         </button>
-                        <p id="creatine-status-text" class="status-display">0 Serving(s) Logged (0g Total)</p>
+                        <button class="quick-btn" data-amount="0.5" data-type="water">
+                            <span class="qb-icon">🍶</span>
+                            <span class="qb-name">Bottle</span>
+                            <span class="qb-amt">500 ml</span>
+                        </button>
+                        <button class="quick-btn" data-amount="1.0" data-type="water">
+                            <span class="qb-icon">🫗</span>
+                            <span class="qb-name">Large</span>
+                            <span class="qb-amt">1.0 L</span>
+                        </button>
+                        <button class="quick-btn creatine-quick-btn" id="dash-creatine-btn">
+                            <span class="qb-icon">💊</span>
+                            <span class="qb-name">Creatine</span>
+                            <span class="qb-amt">5 g</span>
+                        </button>
                     </div>
                 </div>
-                
-                <div class="card secondary-card dosage-card">
-                    <h3 class="card-title">Dosage Information</h3>
-                    <div class="detail-row">
-                        <span class="detail-label">Standard Dose:</span>
-                        <span class="detail-value">5 grams</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Maximum Dose:</span>
-                        <span class="detail-value">20 grams (4 Servings)</span>
-                    </div>
-                    <p class="small-note">Consult your physician before starting any new supplement regimen.</p>
-                </div>
-            </section>
 
-            <section id="history-page" class="tracker-module">
-                
-                <div class="card primary-card stats-card">
-                    <h2 class="card-title">Your Oasis Performance</h2>
-                    
-                    <div class="overview-stats">
-                        <div class="stat-box">
-                            <span id="avg-liters" class="stat-value">--</span>
-                            <span class="stat-label">Avg. Daily Liters</span>
+                <!-- Motivational Quote -->
+                <div class="card quote-card">
+                    <div class="quote-mark">"</div>
+                    <p id="quote-text" class="quote-body">Stay hydrated, stay sharp.</p>
+                    <p id="quote-author" class="quote-author text-muted">— Oasis</p>
+                </div>
+
+                <!-- Achievements -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Achievements</h3>
+                        <span id="badge-summary" class="chip">0 / 10</span>
+                    </div>
+                    <div id="badges-grid" class="badges-grid"></div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════
+             PAGE 2 · HYDRATION
+        ═══════════════════════════════════════ -->
+        <section id="page-hydration" class="page">
+            <div class="page-scroll">
+
+                <!-- Progress Ring Card -->
+                <div class="card ring-card">
+                    <div class="ring-wrap">
+                        <svg class="progress-ring-svg" viewBox="0 0 220 220" width="220" height="220">
+                            <defs>
+                                <linearGradient id="waterGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#34b8e6"/>
+                                    <stop offset="100%" stop-color="#015486"/>
+                                </linearGradient>
+                                <filter id="glow">
+                                    <feGaussianBlur stdDeviation="3" result="blur"/>
+                                    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                                </filter>
+                            </defs>
+                            <circle cx="110" cy="110" r="90" class="ring-track"/>
+                            <circle cx="110" cy="110" r="90" id="hydration-ring"
+                                class="ring-progress"
+                                stroke="url(#waterGrad)"
+                                stroke-dasharray="565.49"
+                                stroke-dashoffset="565.49"
+                                stroke-linecap="round"
+                                filter="url(#glow)"
+                                transform="rotate(-90 110 110)"/>
+                        </svg>
+                        <div class="ring-center-info">
+                            <span id="ring-liters" class="ring-main">0.0</span>
+                            <span class="ring-unit">liters</span>
+                            <span id="ring-pct" class="ring-pct">0%</span>
                         </div>
-                        <div class="stat-box">
-                            <span id="creatine-consistency" class="stat-value">--</span>
-                            <span class="stat-label">Consistency</span>
+                    </div>
+                    <div class="goal-row">
+                        <span class="text-muted small-text">Goal: <strong id="goal-text">3.7 L</strong></span>
+                        <button class="text-btn" id="edit-goal-btn"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+                    </div>
+                </div>
+
+                <!-- Drink Type -->
+                <div class="card">
+                    <h3 class="card-title">Log Drink</h3>
+                    <div class="drink-types">
+                        <button class="drink-type active" data-drink="water" data-coeff="1.0">💧 Water</button>
+                        <button class="drink-type" data-drink="coffee" data-coeff="0.8">☕ Coffee</button>
+                        <button class="drink-type" data-drink="tea" data-coeff="0.9">🍵 Tea</button>
+                        <button class="drink-type" data-drink="juice" data-coeff="0.7">🧃 Juice</button>
+                    </div>
+                    <div class="amount-btns">
+                        <button class="amt-btn" data-amount="0.25">250 ml</button>
+                        <button class="amt-btn" data-amount="0.5">500 ml</button>
+                        <button class="amt-btn" data-amount="0.75">750 ml</button>
+                        <button class="amt-btn" data-amount="1.0">1.0 L</button>
+                    </div>
+                    <div class="custom-row">
+                        <input type="number" id="custom-ml" placeholder="Custom amount (ml)" min="1" max="5000" step="10" class="custom-input">
+                        <button id="custom-log-btn" class="accent-btn">Log</button>
+                    </div>
+                    <div class="undo-row">
+                        <button id="undo-btn" class="text-btn danger-text" disabled>
+                            <i class="fa-solid fa-rotate-left"></i> Undo
+                        </button>
+                        <span id="undo-label" class="text-muted small-text"></span>
+                    </div>
+                </div>
+
+                <!-- Today's Log Timeline -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Today's Log</h3>
+                        <button id="clear-today-btn" class="text-btn danger-text">Clear</button>
+                    </div>
+                    <div id="today-timeline" class="timeline">
+                        <p class="empty-sm">No drinks logged yet.</p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════
+             PAGE 3 · SUPPLEMENTS
+        ═══════════════════════════════════════ -->
+        <section id="page-supplements" class="page">
+            <div class="page-scroll">
+
+                <!-- Creatine Hero -->
+                <div class="card supp-hero">
+                    <div class="supp-header">
+                        <div>
+                            <h2 class="card-title" style="margin-bottom:2px">Creatine</h2>
+                            <p id="phase-label" class="text-muted small-text">Maintenance Phase · 5g / day</p>
+                        </div>
+                        <div class="supp-ring-wrap">
+                            <svg width="64" height="64" viewBox="0 0 64 64">
+                                <circle cx="32" cy="32" r="26" class="mini-ring-bg"/>
+                                <circle cx="32" cy="32" r="26" id="creatine-ring"
+                                    class="mini-ring-fill mini-ring-creatine"
+                                    stroke-dasharray="163.4" stroke-dashoffset="163.4"
+                                    transform="rotate(-90 32 32)"/>
+                            </svg>
+                            <span id="creatine-ring-pct" class="supp-ring-pct">0%</span>
+                        </div>
+                    </div>
+
+                    <button id="creatine-log-btn" class="cta-btn">
+                        <i class="fa-solid fa-plus-circle"></i>
+                        <span id="cta-btn-text">Log 5g Serving</span>
+                    </button>
+
+                    <div class="creatine-trio">
+                        <div class="ctrio-item">
+                            <span id="c-servings" class="ctrio-val">0</span>
+                            <span class="ctrio-lbl">Servings</span>
+                        </div>
+                        <div class="ctrio-item">
+                            <span id="c-grams" class="ctrio-val">0g</span>
+                            <span class="ctrio-lbl">Total</span>
+                        </div>
+                        <div class="ctrio-item">
+                            <span id="c-timer" class="ctrio-val">—</span>
+                            <span class="ctrio-lbl">Last Dose</span>
                         </div>
                     </div>
                 </div>
-                
-                <div class="card secondary-card history-list-card">
-                    <h3 class="card-title">Recent Activity</h3>
-                    <ul id="history-list">
-                        <li class="loading-message">Loading history...</li>
-                    </ul>
-                </div>
-            </section>
 
-        </div> 
+                <!-- Loading Phase -->
+                <div class="card">
+                    <div class="setting-row">
+                        <div>
+                            <div class="setting-label">Loading Phase</div>
+                            <p class="text-muted small-text">20g / day for 5–7 days to saturate faster</p>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" id="loading-phase-toggle">
+                            <span class="toggle-track"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Dosage Reference -->
+                <div class="card">
+                    <h3 class="card-title">Dosage Reference</h3>
+                    <div class="detail-row">
+                        <span class="detail-label">Serving Size</span>
+                        <span class="detail-val" id="ref-serving">5g</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Daily Target</span>
+                        <span class="detail-val" id="ref-daily">5g (1 serving)</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Max Safe</span>
+                        <span class="detail-val">20g / day</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Best Taken</span>
+                        <span class="detail-val">Post-workout</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">With Meals</span>
+                        <span class="detail-val">Yes (improves uptake)</span>
+                    </div>
+                    <p class="small-note" style="margin-top:10px">Consult your physician before starting any supplement.</p>
+                </div>
+
+                <!-- Notes -->
+                <div class="card">
+                    <h3 class="card-title">Session Notes</h3>
+                    <textarea id="supp-notes" class="notes-area" placeholder="How do you feel today? Timing, brand, observations..."></textarea>
+                    <button id="save-notes-btn" class="accent-btn" style="width:100%;margin-top:8px">Save Notes</button>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════
+             PAGE 4 · ANALYTICS
+        ═══════════════════════════════════════ -->
+        <section id="page-analytics" class="page">
+            <div class="page-scroll">
+
+                <!-- All-Time Stats -->
+                <div class="card">
+                    <h2 class="card-title">All-Time Stats</h2>
+                    <div class="stats-4">
+                        <div class="stat4">
+                            <span class="stat4-val" id="s-avg">—</span>
+                            <span class="stat4-lbl">Avg Daily L</span>
+                        </div>
+                        <div class="stat4">
+                            <span class="stat4-val" id="s-goalrate">—</span>
+                            <span class="stat4-lbl">Goal Rate</span>
+                        </div>
+                        <div class="stat4">
+                            <span class="stat4-val" id="s-consistency">—</span>
+                            <span class="stat4-lbl">Creatine %</span>
+                        </div>
+                        <div class="stat4">
+                            <span class="stat4-val" id="s-best">—</span>
+                            <span class="stat4-lbl">Best Day</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hydration Chart -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">14-Day Hydration</h3>
+                        <span class="text-muted small-text">L / day</span>
+                    </div>
+                    <div class="chart-wrap">
+                        <svg id="chart-water" viewBox="0 0 320 150" preserveAspectRatio="xMidYMid meet" width="100%" height="150"></svg>
+                    </div>
+                </div>
+
+                <!-- Creatine Chart -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">14-Day Creatine</h3>
+                        <span class="text-muted small-text">servings / day</span>
+                    </div>
+                    <div class="chart-wrap">
+                        <svg id="chart-creatine" viewBox="0 0 320 120" preserveAspectRatio="xMidYMid meet" width="100%" height="120"></svg>
+                    </div>
+                </div>
+
+                <!-- History List -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">History</h3>
+                        <button id="export-btn" class="text-btn"><i class="fa-solid fa-download"></i> Export</button>
+                    </div>
+                    <div id="history-list" class="history-list">
+                        <p class="empty-sm">No history yet. Start tracking!</p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════
+             PAGE 5 · SETTINGS
+        ═══════════════════════════════════════ -->
+        <section id="page-settings" class="page">
+            <div class="page-scroll">
+
+                <h2 class="section-heading">Profile</h2>
+                <div class="card">
+                    <div class="setting-row">
+                        <label class="setting-label">Your Name</label>
+                        <input type="text" id="s-name" class="setting-input" placeholder="Name">
+                    </div>
+                    <div class="setting-row">
+                        <label class="setting-label">Body Weight</label>
+                        <div class="input-group">
+                            <input type="number" id="s-weight" class="setting-input short" min="30" max="300" placeholder="70">
+                            <select id="s-weight-unit" class="setting-select">
+                                <option value="kg">kg</option>
+                                <option value="lbs">lbs</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="setting-row">
+                        <label class="setting-label">Activity Level</label>
+                        <select id="s-activity" class="setting-select">
+                            <option value="sedentary">Sedentary</option>
+                            <option value="light">Lightly Active</option>
+                            <option value="moderate" selected>Moderate</option>
+                            <option value="active">Very Active</option>
+                            <option value="athlete">Athlete</option>
+                        </select>
+                    </div>
+                    <button id="save-profile-btn" class="accent-btn full-btn">Save Profile</button>
+                    <div id="smart-goal-box" class="smart-box" style="display:none"></div>
+                </div>
+
+                <h2 class="section-heading">Hydration Goal</h2>
+                <div class="card">
+                    <div class="setting-row">
+                        <label class="setting-label">Daily Goal (Liters)</label>
+                        <input type="number" id="s-goal" class="setting-input short" min="0.5" max="10" step="0.1" value="3.7">
+                    </div>
+                    <button id="save-goal-btn" class="accent-btn full-btn">Update Goal</button>
+                </div>
+
+                <h2 class="section-heading">Appearance</h2>
+                <div class="card">
+                    <div class="setting-row">
+                        <div>
+                            <div class="setting-label">Dark Mode</div>
+                            <p class="text-muted small-text">Easier on the eyes at night</p>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" id="s-dark">
+                            <span class="toggle-track"></span>
+                        </label>
+                    </div>
+                    <div class="setting-row" style="margin-top:12px">
+                        <label class="setting-label">Display Units</label>
+                        <select id="s-units" class="setting-select">
+                            <option value="metric">Metric (L / kg)</option>
+                            <option value="imperial">Imperial (fl oz / lbs)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <h2 class="section-heading">Data</h2>
+                <div class="card">
+                    <button id="export-data-btn" class="accent-btn full-btn" style="margin-bottom:10px">
+                        <i class="fa-solid fa-file-arrow-down"></i> Export All Data (JSON)
+                    </button>
+                    <button id="clear-data-btn" class="danger-btn full-btn">
+                        <i class="fa-solid fa-trash-can"></i> Clear All Data
+                    </button>
+                </div>
+
+                <p class="version-note text-muted">Oasis v2.0 · Made with 💙 by you</p>
+
+            </div>
+        </section>
+
     </main>
 
-    <script src="scripts.js" defer></script>
+    <!-- BOTTOM NAV -->
+    <nav id="bottom-nav">
+        <button class="nav-btn active" data-page="page-dashboard">
+            <i class="fa-solid fa-house"></i>
+            <span>Home</span>
+        </button>
+        <button class="nav-btn" data-page="page-hydration">
+            <i class="fa-solid fa-droplet"></i>
+            <span>Water</span>
+        </button>
+        <button class="nav-btn" data-page="page-supplements">
+            <i class="fa-solid fa-pills"></i>
+            <span>Supps</span>
+        </button>
+        <button class="nav-btn" data-page="page-analytics">
+            <i class="fa-solid fa-chart-column"></i>
+            <span>Stats</span>
+        </button>
+        <button class="nav-btn" data-page="page-settings">
+            <i class="fa-solid fa-gear"></i>
+            <span>Settings</span>
+        </button>
+    </nav>
+
+    <!-- TOAST -->
+    <div id="toast-container"></div>
+
+    <!-- GOAL EDIT MODAL -->
+    <div id="modal-overlay" class="modal-overlay hidden">
+        <div class="modal-box">
+            <h3 class="modal-title">Set Daily Goal</h3>
+            <p class="text-muted small-text" style="margin-bottom:14px">How many liters do you want to drink today?</p>
+            <input type="number" id="modal-goal-input" class="modal-input" min="0.5" max="10" step="0.1" placeholder="3.7">
+            <div class="modal-btns">
+                <button id="modal-cancel" class="modal-btn secondary">Cancel</button>
+                <button id="modal-save" class="modal-btn primary">Save Goal</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONFETTI CANVAS -->
+    <canvas id="confetti-canvas"></canvas>
+
+</div>
+<script src="scripts.js" defer></script>
 </body>
 </html>
