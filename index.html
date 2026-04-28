@@ -50,6 +50,24 @@
           <h2 id="greet-main">Good morning!</h2>
         </div>
 
+        <!-- Wellness Score -->
+        <div class="wellness-card">
+          <div class="ws-left">
+            <div class="ws-score-wrap">
+              <svg width="70" height="70" viewBox="0 0 70 70">
+                <circle cx="35" cy="35" r="28" class="ws-track"/>
+                <circle cx="35" cy="35" r="28" id="ws-ring" class="ws-fill" stroke-dasharray="175.93" stroke-dashoffset="175.93" transform="rotate(-90 35 35)"/>
+              </svg>
+              <span id="ws-score" class="ws-num">0</span>
+            </div>
+          </div>
+          <div class="ws-right">
+            <div class="ws-title">Wellness Score</div>
+            <div id="ws-grade" class="ws-grade">—</div>
+            <div id="ws-tip" class="ws-tip label-muted small">Log water & creatine to build your score</div>
+          </div>
+        </div>
+
         <!-- Today summary row -->
         <div class="twin-cards">
           <div class="twin-card water-twin" data-nav="page-water">
@@ -173,6 +191,7 @@
 
         <!-- Ring card -->
         <div class="card ring-card">
+          <div class="ring-wrap">
           <svg class="big-ring-svg" viewBox="0 0 240 240" width="200" height="200">
             <defs>
               <linearGradient id="waterGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -199,6 +218,7 @@
             <span class="ring-unit" id="ring-unit-lbl">liters</span>
             <span id="ring-pct" class="ring-pct-lbl">0%</span>
           </div>
+          </div><!-- /ring-wrap -->
           <div class="ring-footer">
             <span class="label-muted">Goal: <strong id="goal-lbl">3.7 L</strong></span>
             <button id="edit-goal-btn" class="text-btn"><i class="fa-solid fa-pen"></i> Edit</button>
@@ -313,6 +333,30 @@
           </div>
         </div>
 
+        <!-- Creatine Saturation (Pro) -->
+        <div class="card pro-card">
+          <div class="pro-lock-overlay" data-feature="Creatine Saturation">
+            <span class="lock-ico">⚡</span>
+            <span class="lock-title">Creatine Saturation Gauge</span>
+            <span class="lock-desc">See exactly how saturated your muscles are & projected peak date</span>
+            <button class="lock-btn">Unlock with Pro</button>
+          </div>
+          <div class="card-hdr"><span class="card-title">⚡ Saturation Gauge</span><span class="pro-chip">PRO</span></div>
+          <div style="height:60px;background:var(--s2);border-radius:8px"></div>
+        </div>
+
+        <!-- Body Composition (Pro) -->
+        <div class="card pro-card">
+          <div class="pro-lock-overlay" data-feature="Body Composition">
+            <span class="lock-ico">🧪</span>
+            <span class="lock-title">Body Composition Calculator</span>
+            <span class="lock-desc">BMI, TDEE, daily protein target, macro breakdown & recomp timeline</span>
+            <button class="lock-btn">Unlock with Pro</button>
+          </div>
+          <div class="card-hdr"><span class="card-title">🧪 Body Composition</span><span class="pro-chip">PRO</span></div>
+          <div style="height:60px;background:var(--s2);border-radius:8px"></div>
+        </div>
+
         <!-- Weight tracker -->
         <div class="card">
           <span class="card-title">Body Weight</span>
@@ -391,6 +435,30 @@
           <div class="chart-box">
             <svg id="chart-creatine" viewBox="0 0 320 120" width="100%" height="120"></svg>
           </div>
+        </div>
+
+        <!-- Caffeine tracker (Pro) -->
+        <div class="card pro-card" id="caffeine-card">
+          <div class="pro-lock-overlay" data-feature="Caffeine Tracker">
+            <span class="lock-ico">☕</span>
+            <span class="lock-title">Caffeine & Energy Tracker</span>
+            <span class="lock-desc">Track caffeine half-life, crash windows & creatine interactions</span>
+            <button class="lock-btn">Unlock with Pro</button>
+          </div>
+          <div class="card-hdr"><span class="card-title">☕ Caffeine Tracker</span><span class="pro-chip">PRO</span></div>
+          <div style="height:80px;background:var(--s2);border-radius:8px"></div>
+        </div>
+
+        <!-- Sleep tracker (Pro) -->
+        <div class="card pro-card" id="sleep-card">
+          <div class="pro-lock-overlay" data-feature="Sleep Tracker">
+            <span class="lock-ico">😴</span>
+            <span class="lock-title">Sleep Quality Tracker</span>
+            <span class="lock-desc">Log sleep & discover how it affects your hydration & performance</span>
+            <button class="lock-btn">Unlock with Pro</button>
+          </div>
+          <div class="card-hdr"><span class="card-title">😴 Sleep Tracker</span><span class="pro-chip">PRO</span></div>
+          <div style="height:60px;background:var(--s2);border-radius:8px"></div>
         </div>
 
         <div class="card">
@@ -510,6 +578,62 @@
     <button class="nb" data-page="page-stats"><i class="fa-solid fa-chart-column"></i><span>Stats</span></button>
     <button class="nb" data-page="page-settings"><i class="fa-solid fa-gear"></i><span>Settings</span></button>
   </nav>
+
+  <!-- AI COACH BUTTON -->
+  <button id="coach-fab" class="coach-fab" title="AI Health Coach">
+    <i class="fa-solid fa-brain"></i>
+    <span class="fab-label">AI Coach</span>
+    <span class="pro-badge-fab">PRO</span>
+  </button>
+
+  <!-- AI COACH PANEL -->
+  <div id="coach-panel" class="coach-panel hidden">
+    <div class="cp-header">
+      <div class="cp-avatar">🤖</div>
+      <div><div class="cp-title">Oasis AI Coach</div><div class="cp-sub label-muted small">Personalized health insights</div></div>
+      <button id="coach-close" class="text-btn" style="margin-left:auto"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div id="coach-messages" class="cp-messages"></div>
+    <div class="cp-actions">
+      <button class="cp-action-btn" data-topic="hydration">💧 Hydration</button>
+      <button class="cp-action-btn" data-topic="creatine">💊 Creatine</button>
+      <button class="cp-action-btn" data-topic="body">🏋️ Body Comp</button>
+      <button class="cp-action-btn" data-topic="plan">📋 Today's Plan</button>
+    </div>
+  </div>
+
+  <!-- UPGRADE MODAL -->
+  <div id="upgrade-modal" class="modal-overlay hidden">
+    <div class="modal-box upgrade-box">
+      <div class="upgrade-crown">👑</div>
+      <h3 class="upgrade-title">Upgrade to Oasis Pro</h3>
+      <p class="label-muted small" style="text-align:center;margin-bottom:18px">Unlock your full health potential</p>
+      <div class="upgrade-features">
+        <div class="uf">🤖 AI Health Coach with personalized insights</div>
+        <div class="uf">🧪 Body Composition Calculator</div>
+        <div class="uf">☕ Caffeine & Energy Tracker</div>
+        <div class="uf">😴 Sleep Quality Tracker</div>
+        <div class="uf">⚡ Creatine Saturation Gauge</div>
+        <div class="uf">📊 30-Day Advanced Analytics</div>
+        <div class="uf">🎨 Custom Themes & Colors</div>
+        <div class="uf">📤 CSV & PDF Export</div>
+      </div>
+      <div class="upgrade-plans">
+        <div class="plan-card plan-monthly" id="plan-monthly">
+          <div class="plan-period">Monthly</div>
+          <div class="plan-price">$4.99<span>/mo</span></div>
+        </div>
+        <div class="plan-card plan-yearly active-plan" id="plan-yearly">
+          <div class="plan-badge">BEST VALUE</div>
+          <div class="plan-period">Yearly</div>
+          <div class="plan-price">$39.99<span>/yr</span></div>
+          <div class="plan-save">Save 33%</div>
+        </div>
+      </div>
+      <button id="upgrade-btn" class="upgrade-cta">Start 7-Day Free Trial</button>
+      <button id="upgrade-cancel" class="text-btn" style="display:block;text-align:center;margin-top:10px;width:100%">Maybe later</button>
+    </div>
+  </div>
 
   <!-- TOAST -->
   <div id="toasts"></div>

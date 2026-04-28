@@ -190,6 +190,7 @@ function updateWater(){
   renderTimeline();
   if(pct>=1&&!goalHit){goalHit=true;toast("🎉 Hydration goal reached!","success");confetti();}
   if(pct<1)goalHit=false;
+  if(typeof calcWellness==="function")calcWellness();
 }
 
 function renderTimeline(){
@@ -486,3 +487,177 @@ function init(){
   go("page-home");
 }
 init();
+
+// === PRO SYSTEM ===
+const isPro = ()=>localStorage.getItem("oasis_pro")==="true";
+function showUpgrade(){
+  document.getElementById("upgrade-modal")?.classList.remove("hidden");
+}
+function activatePro(){
+  localStorage.setItem("oasis_pro","true");
+  document.getElementById("upgrade-modal")?.classList.add("hidden");
+  document.querySelectorAll(".pro-lock-overlay").forEach(o=>o.style.display="none");
+  toast("🎉 Welcome to Oasis Pro! All features unlocked.","success");
+  confetti();
+  updateCoachFab();
+}
+function updateCoachFab(){
+  const fab=document.getElementById("coach-fab");
+  if(fab&&isPro())fab.querySelector(".pro-badge-fab").textContent="✓";
+}
+function unlockProCards(){
+  if(isPro())document.querySelectorAll(".pro-lock-overlay").forEach(o=>o.style.display="none");
+}
+
+// === WELLNESS SCORE ===
+function calcWellness(){
+  const t=total(S),pct=Math.min(t/S.goal,1);
+  let score=0;
+  score+=Math.round(pct*45);                          // hydration: 0-45
+  if(S.creatineServings>0) score+=20;                  // creatine: 20
+  const str=streaks(S.history);
+  score+=Math.min(str.w*2,15);                         // streak bonus: 0-15
+  if(S.workoutDay&&pct>.5) score+=10;                  // workout logged: 10
+  if(S.history.length>0){
+    const avg=S.history.slice(-7).reduce((s,d)=>s+d.w,0)/Math.min(S.history.length,7);
+    if(avg>=S.goal) score+=10;                         // weekly avg: 10
+  }
+  score=Math.min(score,100);
+  const grades=[
+    {min:90,g:"Elite 🏆",c:"#f59e0b"},
+    {min:75,g:"Strong 💪",c:"#4ade80"},
+    {min:55,g:"Good 👍",c:"#38bdf8"},
+    {min:35,g:"Building 📈",c:"#94a3b8"},
+    {min:0, g:"Starting 🌱",c:"#6b86a8"},
+  ];
+  const {g,c}=grades.find(x=>score>=x.min);
+  const circ=175.93;
+  setRing("ws-ring",score/100,circ);
+  const ring=document.getElementById("ws-ring");if(ring)ring.style.stroke=c;
+  const wsn=document.getElementById("ws-score");if(wsn)wsn.textContent=score;
+  const wsg=document.getElementById("ws-grade");if(wsg){wsg.textContent=g;wsg.style.color=c;}
+  const wst=document.getElementById("ws-tip");
+  if(wst){
+    const tips=[
+      pct<.5?"💧 You're under 50% hydration — log a drink now!":"",
+      S.creatineServings===0?"💊 Haven't logged creatine yet today.":"",
+      str.w===0?"🔥 Start a streak — hit your goal today!":"",
+      score>=90?"🎯 Perfect day — keep it up!":"",
+    ].filter(Boolean);
+    wst.textContent=tips[0]||"Great effort today! Keep the momentum.";
+  }
+  return score;
+}
+
+// === AI COACH ===
+function coachMsg(text,type="bot",label=""){
+  return`<div class="cp-msg ${type}">${label?`<div class="msg-label">${label}</div>`:""}${text}</div>`;
+}
+
+function getCoachInsights(topic){
+  const t=total(S),pct=Math.round(t/S.goal*100),str=streaks(S.history);
+  const ws=calcWellness();
+  const kg=S.weightUnit==="lbs"?S.weight/2.205:S.weight;
+  const protein=Math.round(kg*(S.activity==="athlete"?2.2:S.activity==="active"?2.0:1.6));
+  const tdee=Math.round(kg*({sedentary:26,light:30,moderate:35,active:40,athlete:45}[S.activity]||35));
+
+  const msgs={
+    hydration:[
+      `You're at <strong>${pct}%</strong> of your ${fmtL(S.goal)} goal today.`,
+      pct>=100?"🌊 Goal crushed! You're fully hydrated — performance is optimized.":
+      pct>=60?`Almost there! Drink <strong>${fmtL(S.goal-t)}</strong> more to hit your goal.`:
+      `You need <strong>${fmtL(S.goal-t)}</strong> more today. Try logging a 500ml bottle right now.`,
+      `Your ${str.w}-day hydration streak is ${str.w>=7?"🔥 incredible":"building nicely"}. Consistency is everything.`,
+      `💡 Tip: Creatine requires extra hydration — drink an additional 0.5L on the days you supplement.`,
+    ],
+    creatine:[
+      S.creatineServings>0?`✅ You've logged ${S.creatineServings} serving(s) today (${S.creatineServings*5}g total).`:`⚠️ You haven't logged creatine yet today.`,
+      `Your creatine consistency is <strong>${S.history.length>0?Math.round(S.history.filter(d=>d.c>0).length/S.history.length*100):0}%</strong> over ${S.history.length} tracked days.`,
+      S.loadingPhase?"Loading phase: Take 20g/day for 5–7 days, split into 4 servings.":"Maintenance phase: 3–5g/day is all you need to maintain saturation.",
+      `💡 Best timing: Post-workout with a simple carb source (like fruit juice) improves uptake by ~60%.`,
+      `After ${Math.min(S.history.filter(d=>d.c>0).length,28)} days of consistent use, your muscles are roughly <strong>${Math.min(Math.round(S.history.filter(d=>d.c>0).length/28*100),100)}%</strong> saturated.`,
+    ],
+    body:[
+      `Based on your profile: <strong>${S.weight}${S.weightUnit}</strong>, activity: <strong>${S.activity}</strong>.`,
+      `📊 Estimated TDEE: <strong>${tdee} kcal/day</strong>`,
+      `🥩 Daily protein target: <strong>${protein}g</strong> (${Math.round(protein/kg*10)/10}g per kg)`,
+      `💧 Optimal water intake: <strong>${(kg*0.035).toFixed(1)}L + ${S.workoutDay?"0.5L workout bonus":"0L"}</strong>`,
+      `BMI: <strong>${(kg/((S.weightUnit==="lbs"?1.78:1.75)**2)).toFixed(1)}</strong> — For accurate body comp, track body weight daily.`,
+    ],
+    plan:[
+      `<strong>Today's Oasis Plan</strong> — Wellness Score: ${ws}/100`,
+      `☀️ Morning: Log 500ml water immediately after waking.`,
+      `💊 ${S.creatineServings===0?"Take your creatine serving (5g) with breakfast.":"✅ Creatine done for today."}`,
+      `🕐 Every 2 hrs: Drink 250–500ml water throughout the day.`,
+      `🎯 Target: ${fmtL(S.goal)} total${S.workoutDay?" + 0.5L workout bonus":""}`,
+      `🌙 Evening: If under goal, have a large glass before bed.`,
+    ],
+  };
+  return msgs[topic]||msgs.hydration;
+}
+
+function openCoach(){
+  const panel=document.getElementById("coach-panel");
+  if(!panel)return;
+  panel.classList.remove("hidden");
+  const msgs=document.getElementById("coach-messages");
+  if(msgs&&msgs.children.length===0){
+    const ws=calcWellness();
+    msgs.innerHTML=coachMsg(`Hey${S.name?" "+S.name:""}! 👋 I'm your Oasis AI Coach.<br><br>Your wellness score today is <strong>${ws}/100</strong>. ${ws>=75?"You're doing great!":ws>=50?"Good progress — let's push further.":"There's room to improve — I'm here to help!"}<br><br>What would you like to explore?`,"bot","AI Coach");
+  }
+}
+
+function closeCoach(){
+  document.getElementById("coach-panel")?.classList.add("hidden");
+}
+
+// === PRO + COACH EVENTS ===
+function proEvents(){
+  // Pro lock overlays → show upgrade
+  document.querySelectorAll(".pro-lock-overlay").forEach(o=>{
+    o.addEventListener("click",()=>{
+      if(!isPro())showUpgrade();
+    });
+  });
+  // Upgrade modal
+  document.getElementById("upgrade-cancel")?.addEventListener("click",()=>{
+    document.getElementById("upgrade-modal")?.classList.add("hidden");
+  });
+  document.getElementById("upgrade-modal")?.addEventListener("click",e=>{
+    if(e.target.id==="upgrade-modal")document.getElementById("upgrade-modal").classList.add("hidden");
+  });
+  document.getElementById("upgrade-btn")?.addEventListener("click",activatePro);
+  // Plan selectors
+  document.getElementById("plan-monthly")?.addEventListener("click",()=>{
+    document.querySelectorAll(".plan-card").forEach(p=>p.classList.remove("active-plan"));
+    document.getElementById("plan-monthly").classList.add("active-plan");
+  });
+  document.getElementById("plan-yearly")?.addEventListener("click",()=>{
+    document.querySelectorAll(".plan-card").forEach(p=>p.classList.remove("active-plan"));
+    document.getElementById("plan-yearly").classList.add("active-plan");
+  });
+  // Coach FAB
+  document.getElementById("coach-fab")?.addEventListener("click",()=>{
+    if(!isPro()){showUpgrade();return;}
+    openCoach();
+  });
+  document.getElementById("coach-close")?.addEventListener("click",closeCoach);
+  // Coach topic buttons
+  document.querySelectorAll(".cp-action-btn").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const topic=btn.dataset.topic;
+      const msgs=document.getElementById("coach-messages");
+      if(!msgs)return;
+      const insights=getCoachInsights(topic);
+      const labels={hydration:"💧 Hydration Analysis",creatine:"💊 Creatine Insights",body:"🧪 Body Composition",plan:"📋 Today's Plan"};
+      msgs.innerHTML+=coachMsg(insights.join("<br><br>"),"insight",labels[topic]||"Insights");
+      setTimeout(()=>msgs.scrollTo({top:msgs.scrollHeight,behavior:"smooth"}),100);
+    });
+  });
+}
+
+// Run pro additions after original init() already ran
+proEvents();
+unlockProCards();
+updateCoachFab();
+calcWellness();
