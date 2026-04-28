@@ -207,6 +207,57 @@
                     <div class="undo-row">
                         <button id="undo-btn" class="text-btn danger-text" disabled>
                             <i class="fa-solid fa-rotate-left"></i> Undo
+    <main id="app-container">
+        
+        <header>
+            <h1 class="logo-text">Oasis Health Tracker </h1>
+            <nav id="app-nav">
+                <button data-page="hydration-tracker" class="active"><i class="fa-solid fa-droplet"></i></button>
+                <button data-page="creatine-tracker"><i class="fa-solid fa-pills"></i></button>
+                <button data-page="history-page"><i class="fa-solid fa-chart-line"></i></button>
+            </nav>
+        </header>
+
+        <div id="tracker-page-container">
+            
+            <section id="hydration-tracker" class="tracker-module">
+                
+                <div class="card primary-card">
+                    <h2 class="card-title">Daily Hydration Goal</h2>
+                    
+                    <div class="circular-progress-ring">
+                        <span id="liter-count">0.0 L / 3.7 L</span>
+                        <span class="percentage-text">0% Complete</span>
+                    </div>
+
+                    <div class="goal-setting">
+                        <label for="hydration-goal-input">Target (Liters):</label>
+                        <input type="number" id="hydration-goal-input" min="0.1" step="0.1" value="3.7">
+                    </div>
+                </div>
+
+                <div class="card secondary-card log-card">
+                    <h3 class="card-title">Log Intake</h3>
+                    <div class="logging-buttons">
+                        <button data-amount="0.25">250 ml</button>
+                        <button data-amount="0.5">500 ml</button>
+                        <button data-amount="1.0">1.0 L</button>
+                    </div>
+                </div>
+                
+                <div class="card info-card">
+                    <p class="small-note"> Hydration Tip:  It's recommended to drink 3 to 4 liters of water daily to support creatine effectiveness and overall hydration per 5g.</p>
+                </div>
+            </section>
+
+            <section id="creatine-tracker" class="tracker-module">
+                
+                <div class="card primary-card supplement-card">
+                    <h2 class="card-title">Creatine Monohydrate</h2>
+                    
+                    <div class="creatine-status-area">
+                        <button id="creatine-log-btn" class="cta-button">
+                            Log Creatine Serving (5g)
                         </button>
                         <span id="undo-label" class="text-muted small-text"></span>
                     </div>
@@ -407,6 +458,22 @@
                                 <option value="kg">kg</option>
                                 <option value="lbs">lbs</option>
                             </select>
+                        <span class="detail-label">Maximum Dose:</span>
+                        <span class="detail-value">20 grams (4 Servings)</span>
+                    </div>
+                    <p class="small-note">Consult your physician before starting any new supplement regimen.</p>
+                </div>
+            </section>
+
+            <section id="history-page" class="tracker-module">
+                
+                <div class="card primary-card stats-card">
+                    <h2 class="card-title">Your Performance</h2>
+                    
+                    <div class="overview-stats">
+                        <div class="stat-box">
+                            <span id="avg-liters" class="stat-value">--</span>
+                            <span class="stat-label">Avg. Daily Liters</span>
                         </div>
                     </div>
                     <div class="setting-row">

@@ -399,6 +399,33 @@ function checkBadges() {
       S.unlockedBadges.push(b.id);
       saveState();
       toast(`🏅 Achievement unlocked: ${b.name}!`, "success");
+    const history = JSON.parse(localStorage.getItem('dailyHistory') || '[]');
+    historyList.innerHTML = '';
+    
+    if (history.length === 0) {
+        historyList.innerHTML = '<li class="empty-message">No history tracked yet. Start logging!</li>';
+    } else {
+        // Display stats
+        const stats = calculateHistoryStats(history);
+        if (avgLitersDisplay) avgLitersDisplay.textContent = stats.avgLiters;
+        if (consistencyDisplay) consistencyDisplay.textContent = stats.consistency;
+        
+        // Display list (last 7 days only, newest first)
+        const lastSevenDays = history.slice(-7).reverse(); 
+        
+        lastSevenDays.forEach(record => {
+            const goal = parseFloat(localStorage.getItem('hydrationGoalLiters') || DEFAULT_GOAL_LITERS);
+            const hydrationStatus = (record.litersLogged >= goal) ? 'Goal Met ✅' : 'Below Goal ⚠️';
+            const creatineStatus = (record.creatineServings >= 1) ? `${record.creatineServings} Serving(s) ` : 'None Logged';
+
+            const listItem = document.createElement('li');
+            listItem.innerHTML = `
+                <span>${record.date}</span>
+                <span>💧 ${record.litersLogged.toFixed(1)} L (${hydrationStatus})</span>
+                <span>${creatineStatus}</span>
+            `;
+            historyList.appendChild(listItem);
+        });
     }
   });
   renderBadges();

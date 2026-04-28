@@ -911,3 +911,84 @@ html, body {
 .page::-webkit-scrollbar { width: 4px; }
 .page::-webkit-scrollbar-track { background: transparent; }
 .page::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--color-background);
+    font-weight: var(--weight-medium);
+}
+
+.detail-label {
+    color: var(--color-text-muted);
+}
+
+.detail-value {
+    font-weight: var(--weight-semi-bold);
+    color: var(--color-primary);
+}
+
+
+/* 8. HISTORY PAGE SPECIFIC STYLING */
+#history-page{ 
+    align-items: center; 
+    padding-top: var(--spacing-md);
+}
+.overview-stats {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    text-align: center;
+    width: 100%;
+    margin-top: 0;
+    margin-bottom: var(--spacing-md);
+}
+
+.stat-box {
+    padding: var(--spacing-sm);
+    flex: 1;
+    border-right: 1px solid var(--color-background); 
+}
+.stat-box:last-child {
+    border-right: none;
+}
+
+.stat-value {
+    display: block;
+    font-size: 2.2em;
+    font-weight: var(--weight-semi-bold);
+    color: var(--color-accent);
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.85em;
+    color: var(--color-text-muted);
+    font-weight: var(--weight-regular);
+    margin-top: 3px;
+}
+
+.history-list-card {
+    width: 100%;
+    max-width: 420px;
+    padding: var(--spacing-md); 
+}
+
+#history-list li {
+    background-color: var(--color-surface);
+    border-radius: var(--border-radius-sm);
+    padding: var(--spacing-sm);
+    margin-bottom: 6px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    font-size: 0.9em;
+    font-weight: var(--weight-regular);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap; 
+    gap: var(--spacing-sm);
+}
+
+#history-list li span:first-child { 
+    font-weight: var(--weight-semi-bold);
+    color: var(--color-primary);
+}
