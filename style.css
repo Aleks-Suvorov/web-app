@@ -325,6 +325,22 @@ a{color:inherit}
 .lock-btn{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border:none;border-radius:20px;padding:7px 18px;font-size:12px;font-weight:800;cursor:pointer;margin-top:4px;font-family:'Inter',sans-serif}
 .pro-chip{font-size:10px;font-weight:800;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;padding:2px 8px;border-radius:20px}
 
+/* pro preview cards (shown behind lock overlay) */
+.pro-preview{padding:4px 0}
+.pp-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:4px 0}
+.pp-label{color:var(--muted);font-weight:500}
+.pp-val{font-weight:700}
+.pp-bar-wrap{height:8px;background:var(--s3);border-radius:6px;overflow:hidden}
+.pp-bar{height:100%;border-radius:6px;background:var(--blue)}
+.pp-bar-purple{background:var(--purple)}
+.pp-grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.pp-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pp-tile{background:var(--s2);border-radius:var(--radius-s);padding:10px 6px;text-align:center;border:1px solid var(--border)}
+.pp-tile-val{display:block;font-size:16px;font-weight:800;color:var(--text);line-height:1}
+.pp-tile-lbl{display:block;font-size:9px;font-weight:600;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.3px}
+.pp-blur{filter:blur(5px);user-select:none;pointer-events:none}
+.pp-warn{color:var(--orange)!important}
+
 /* === COACH FAB === */
 .coach-fab{position:fixed;bottom:calc(var(--nav-h) + 14px);right:14px;background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;border:none;border-radius:28px;padding:10px 16px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px;box-shadow:0 6px 24px rgba(124,58,237,.5);z-index:40;cursor:pointer;font-family:'Inter',sans-serif;transition:transform .2s,box-shadow .2s}
 .coach-fab:active{transform:scale(.95)}
