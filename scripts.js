@@ -154,6 +154,23 @@ function dayReset(){
 
 // === HELPERS ===
 const total=st=>st.waterLogs.reduce((s,e)=>s+(e.ml/1000)*e.coeff,0);
+
+function countUp(el, to, dur=650) {
+  if (!el) return;
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduced) { el.textContent = to; return; }
+  const from = parseFloat(el.textContent) || 0;
+  if (from === to) return;
+  const start = performance.now();
+  const step = (now) => {
+    const p = Math.min((now - start) / dur, 1);
+    const ease = 1 - Math.pow(1 - p, 3);
+    el.textContent = Math.round(from + (to - from) * ease);
+    if (p < 1) requestAnimationFrame(step);
+    else el.textContent = to;
+  };
+  requestAnimationFrame(step);
+}
 function streaks(history){
   const rev=[...history].reverse();
   let w=0,c=0;
@@ -222,10 +239,10 @@ function updateDash(){
   if(dot)dot.className="supp-dot "+(S.creatineServings>0?"dot-done":"dot-idle");
   // streaks
   const str=streaks(S.history);
-  const sw=document.getElementById("sb-water");if(sw)sw.textContent=str.w;
-  const sc=document.getElementById("sb-creatine");if(sc)sc.textContent=str.c;
-  const sd=document.getElementById("sb-days");if(sd)sd.textContent=S.history.length;
-  const hs=document.getElementById("hdr-streak-num");if(hs)hs.textContent=Math.max(str.w,str.c);
+  const sw=document.getElementById("sb-water");countUp(sw,str.w);
+  const sc=document.getElementById("sb-creatine");countUp(sc,str.c);
+  const sd=document.getElementById("sb-days");countUp(sd,S.history.length);
+  const hs=document.getElementById("hdr-streak-num");countUp(hs,Math.max(str.w,str.c));
   // greeting
   const hr=new Date().getHours();
   const gn=S.name?`, ${S.name}`:"!";
@@ -679,7 +696,7 @@ function calcWellness(){
   const circ=175.93;
   setRing("ws-ring",score/100,circ);
   const ring=document.getElementById("ws-ring");if(ring)ring.style.stroke=c;
-  const wsn=document.getElementById("ws-score");if(wsn)wsn.textContent=score;
+  const wsn=document.getElementById("ws-score");countUp(wsn,score);
   const wsg=document.getElementById("ws-grade");if(wsg){wsg.textContent=g;wsg.style.color=c;}
 
   // smart tip based on biggest missing points
