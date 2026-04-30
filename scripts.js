@@ -195,7 +195,7 @@ function updateWater(){
 
 function renderTimeline(){
   const el=document.getElementById("timeline");if(!el)return;
-  if(S.waterLogs.length===0){el.innerHTML='<div class="empty-msg">No drinks logged yet today.</div>';return;}
+  if(S.waterLogs.length===0){el.innerHTML='<div class="empty-guidance"><div class="eg-icon">💧</div><div class="eg-title">Nothing logged yet</div><div class="eg-desc">Tap a button above to log your first drink today.</div></div>';return;}
   el.innerHTML=[...S.waterLogs].reverse().map(e=>{
     const t=new Date(e.time);
     const ts=t.getHours().toString().padStart(2,"0")+":"+t.getMinutes().toString().padStart(2,"0");
@@ -243,7 +243,7 @@ function logCreatine(){
 // === WEIGHT ===
 function renderWeightHistory(){
   const el=document.getElementById("weight-history");if(!el)return;
-  if(!S.weightLog||S.weightLog.length===0){el.innerHTML='<p class="empty-msg">No weight logged yet.</p>';return;}
+  if(!S.weightLog||S.weightLog.length===0){el.innerHTML='<div class="empty-guidance"><div class="eg-icon">⚖️</div><div class="eg-title">No weight logged</div><div class="eg-desc">Add body weight entries to view progress trends.</div></div>';return;}
   el.innerHTML=[...S.weightLog].reverse().slice(0,7).map(e=>{
     return`<div class="w-entry"><span class="w-val">${e.val} ${e.unit}</span><span class="w-date">${e.date}</span></div>`;
   }).join("");
@@ -301,10 +301,13 @@ function renderAnalytics(){
   drawBars("chart-creatine",last14.map(d=>d.c),last14.map(d=>new Date(d.date).toLocaleDateString(undefined,{month:"numeric",day:"numeric"})),null,120,"#c084fc","#7c3aed");
   const hl=document.getElementById("history-list");
   if(hl){
-    if(h.length===0){hl.innerHTML='<p class="empty-msg">No history yet.</p>';}
-    else{hl.innerHTML=[...h].reverse().slice(0,30).map(d=>{
-      return`<div class="hist-item"><div class="hist-date">${d.date}</div><div class="hist-row"><span class="${d.goalMet?"hist-met":"hist-miss"}">${d.goalMet?"✅":"⚠️"} ${d.w.toFixed(1)}L</span><span class="hist-c">${d.c>0?`💊 ${d.c} serving(s)`:"No creatine"}</span></div></div>`;
-    }).join("");}
+    if(h.length===0){
+      hl.innerHTML='<div class="empty-guidance"><div class="eg-icon">📅</div><div class="eg-title">No history yet</div><div class="eg-desc">Log water and creatine today — your data appears here tomorrow. Track 3 days to unlock trend charts.</div></div>';
+    } else {
+      hl.innerHTML=[...h].reverse().slice(0,30).map(d=>{
+        return`<div class="hist-item"><div class="hist-date">${d.date}</div><div class="hist-row"><span class="${d.goalMet?"hist-met":"hist-miss"}">${d.goalMet?"✅":"⚠️"} ${d.w.toFixed(1)}L</span><span class="hist-c">${d.c>0?`💊 ${d.c} serving(s)`:"No creatine"}</span></div></div>`;
+      }).join("");
+    }
   }
 }
 
@@ -312,7 +315,7 @@ function drawBars(id,data,labels,goal,H,c1,c2){
   const svg=document.getElementById(id);if(!svg)return;
   const ns="http://www.w3.org/2000/svg";
   svg.innerHTML=`<defs><linearGradient id="g${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${c1}"/><stop offset="100%" stop-color="${c2}" stop-opacity=".7"/></linearGradient></defs>`;
-  if(data.length===0){const t=document.createElementNS(ns,"text");t.setAttribute("x","160");t.setAttribute("y",H/2);t.setAttribute("text-anchor","middle");t.setAttribute("fill","#6b86a8");t.setAttribute("font-size","12");t.textContent="No data yet";svg.appendChild(t);return;}
+  if(data.length===0){const t=document.createElementNS(ns,"text");t.setAttribute("x","160");t.setAttribute("y",H/2);t.setAttribute("text-anchor","middle");t.setAttribute("fill","#6b86a8");t.setAttribute("font-size","12");t.textContent="Log 3 days to unlock trend charts";svg.appendChild(t);return;}
   const pL=28,pR=6,pT=8,pB=22,W=320,cW=W-pL-pR,cH=H-pT-pB,n=data.length;
   const max=Math.max(...data,goal||0,0.1);
   const sw=cW/n,bw=Math.max(sw*.65,3);
