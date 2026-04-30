@@ -512,17 +512,19 @@ function unlockProCards(){
 // === WELLNESS SCORE ===
 function calcWellness(){
   const t=total(S),pct=Math.min(t/S.goal,1);
-  let score=0;
-  score+=Math.round(pct*45);                          // hydration: 0-45
-  if(S.creatineServings>0) score+=20;                  // creatine: 20
   const str=streaks(S.history);
-  score+=Math.min(str.w*2,15);                         // streak bonus: 0-15
-  if(S.workoutDay&&pct>.5) score+=10;                  // workout logged: 10
+
+  const hydrPts=Math.round(pct*45);
+  const crPts=S.creatineServings>0?20:0;
+  const strPts=Math.min(str.w*2,15);
+  const wrkPts=(S.workoutDay&&pct>.5)?10:0;
+  let avgPts=0;
   if(S.history.length>0){
     const avg=S.history.slice(-7).reduce((s,d)=>s+d.w,0)/Math.min(S.history.length,7);
-    if(avg>=S.goal) score+=10;                         // weekly avg: 10
+    if(avg>=S.goal) avgPts=10;
   }
-  score=Math.min(score,100);
+  const score=Math.min(hydrPts+crPts+strPts+wrkPts+avgPts,100);
+
   const grades=[
     {min:90,g:"Elite 🏆",c:"#f59e0b"},
     {min:75,g:"Strong 💪",c:"#4ade80"},
@@ -536,16 +538,33 @@ function calcWellness(){
   const ring=document.getElementById("ws-ring");if(ring)ring.style.stroke=c;
   const wsn=document.getElementById("ws-score");if(wsn)wsn.textContent=score;
   const wsg=document.getElementById("ws-grade");if(wsg){wsg.textContent=g;wsg.style.color=c;}
+
+  // smart tip based on biggest missing points
   const wst=document.getElementById("ws-tip");
   if(wst){
-    const tips=[
-      pct<.5?"💧 You're under 50% hydration — log a drink now!":"",
-      S.creatineServings===0?"💊 Haven't logged creatine yet today.":"",
-      str.w===0?"🔥 Start a streak — hit your goal today!":"",
-      score>=90?"🎯 Perfect day — keep it up!":"",
-    ].filter(Boolean);
-    wst.textContent=tips[0]||"Great effort today! Keep the momentum.";
+    const missing=[
+      {pts:45-hydrPts, msg:`💧 Drink ${fmtL(S.goal-t)} more to max hydration (+${45-hydrPts} pts)`},
+      {pts:20-crPts,   msg:`💊 Log your creatine serving to gain +20 pts`},
+      {pts:15-strPts,  msg:`🔥 Keep your streak going — hit goal today (+${15-strPts} pts)`},
+      {pts:10-wrkPts,  msg:`💪 Mark today as a workout day after hitting 50% hydration (+10 pts)`},
+      {pts:10-avgPts,  msg:`📈 Hit your goal 7 days in a row to unlock avg bonus (+10 pts)`},
+    ].filter(x=>x.pts>0).sort((a,b)=>b.pts-a.pts);
+    wst.textContent=missing.length?missing[0].msg:"🎯 Perfect wellness today — keep it up!";
   }
+
+  // update breakdown bars
+  const setBar=(id,pts,max)=>{
+    const bar=document.getElementById(`wsbr-bar-${id}`);
+    const lbl=document.getElementById(`wsbr-pts-${id}`);
+    if(bar) bar.style.width=Math.round(pts/max*100)+"%";
+    if(lbl) lbl.textContent=pts+"/"+max;
+  };
+  setBar("hydration",hydrPts,45);
+  setBar("creatine",crPts,20);
+  setBar("streak",strPts,15);
+  setBar("workout",wrkPts,10);
+  setBar("avg",avgPts,10);
+
   return score;
 }
 

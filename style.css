@@ -303,6 +303,18 @@ a{color:inherit}
 .ws-grade{font-size:22px;font-weight:900;line-height:1;margin-bottom:4px}
 .ws-tip{line-height:1.4}
 
+/* wellness breakdown bars */
+.ws-breakdown{background:var(--s1);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;display:flex;flex-direction:column;gap:8px;box-shadow:0 4px 24px rgba(0,0,0,.18)}
+.ws-br-item{display:flex;align-items:center;gap:8px}
+.wsbr-icon{font-size:14px;width:20px;text-align:center;flex-shrink:0}
+.wsbr-bar-wrap{flex:1;height:6px;background:var(--s3);border-radius:6px;overflow:hidden}
+.wsbr-bar{height:100%;border-radius:6px;background:var(--blue);transition:width .7s cubic-bezier(.4,0,.2,1);width:0}
+.wsbr-bar-purple{background:var(--purple)}
+.wsbr-bar-orange{background:var(--orange)}
+.wsbr-bar-green{background:var(--green)}
+.wsbr-bar-teal{background:#2dd4bf}
+.wsbr-pts{font-size:10px;font-weight:700;color:var(--muted);min-width:32px;text-align:right;flex-shrink:0}
+
 /* === PRO LOCK SYSTEM === */
 .pro-card{position:relative;overflow:hidden}
 .pro-lock-overlay{position:absolute;inset:0;z-index:5;background:rgba(6,13,26,.88);backdrop-filter:blur(3px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:16px;border-radius:var(--radius);cursor:pointer;transition:background .2s}
