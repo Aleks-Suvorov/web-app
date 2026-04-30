@@ -500,6 +500,21 @@
           <div id="smart-goal-box" class="smart-box" style="display:none"></div>
         </div>
 
+        <h3 class="section-hdg">AI Coach</h3>
+        <div class="card">
+          <div class="apikey-row">
+            <div class="apikey-icon">🤖</div>
+            <div>
+              <div class="setting-lbl">Anthropic API Key</div>
+              <p class="label-muted small">Stored locally, sent only to Anthropic</p>
+            </div>
+          </div>
+          <input id="s-api-key" type="password" class="text-input full-w" placeholder="sk-ant-..." style="margin-top:10px">
+          <div id="api-key-status" class="api-status"></div>
+          <button id="save-api-key-btn" class="accent-btn full-w" style="margin-top:10px">Save Key &amp; Enable AI</button>
+          <p class="label-muted small" style="margin-top:8px;line-height:1.5">Uses Claude Haiku (~$0.001 per chat). <a href="https://console.anthropic.com" target="_blank" style="color:var(--blue)">Get a free key →</a></p>
+        </div>
+
         <h3 class="section-hdg">Hydration Goal</h3>
         <div class="card">
           <div class="setting-row">
@@ -599,6 +614,11 @@
       <button class="cp-action-btn" data-topic="creatine">💊 Creatine</button>
       <button class="cp-action-btn" data-topic="body">🏋️ Body Comp</button>
       <button class="cp-action-btn" data-topic="plan">📋 Today's Plan</button>
+      <button class="cp-action-btn" data-topic="motivation">🔥 Motivate Me</button>
+    </div>
+    <div class="cp-input-row">
+      <input id="coach-input" type="text" class="coach-input" placeholder="Ask anything about your health...">
+      <button id="coach-send" class="coach-send-btn"><i class="fa-solid fa-paper-plane"></i></button>
     </div>
   </div>
 

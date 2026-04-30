@@ -661,3 +661,270 @@ proEvents();
 unlockProCards();
 updateCoachFab();
 calcWellness();
+
+// ── COACH CHAT ENGINE ─────────────────────────────────────────────────────
+let chatHistory = [];
+const getApiKey = () => localStorage.getItem("oasis_api_key") || "";
+
+function buildSystemPrompt() {
+  const t = total(S), pct = Math.round(t / S.goal * 100);
+  const str = streaks(S.history);
+  const kg = S.weightUnit === "lbs" ? S.weight / 2.205 : S.weight;
+  const protein = Math.round(kg * ({sedentary:1.4,light:1.6,moderate:1.8,active:2.0,athlete:2.2}[S.activity]||1.8));
+  const tdee = Math.round(kg * ({sedentary:26,light:30,moderate:35,active:40,athlete:45}[S.activity]||35));
+  const avgWater = S.history.length > 0
+    ? (S.history.slice(-7).reduce((s,d) => s+d.w, 0) / Math.min(S.history.length,7)).toFixed(1)
+    : "N/A";
+  const creatineDays = S.history.filter(d => d.c > 0).length;
+  const saturation = Math.min(Math.round(creatineDays / 28 * 100), 100);
+  const ws = (() => {
+    let sc = Math.round(Math.min(t/S.goal,1)*45);
+    if (S.creatineServings > 0) sc += 20;
+    sc += Math.min(str.w * 2, 15);
+    if (S.workoutDay) sc += 10;
+    return Math.min(sc, 100);
+  })();
+
+  return `You are Oasis Coach — a world-class personal health & performance coach embedded in a gym-focused health tracker app. You have real-time access to this user's exact health data and your job is to give hyper-personalized, science-backed coaching.
+
+=== USER PROFILE ===
+Name: ${S.name || "the user"}
+Body weight: ${S.weight} ${S.weightUnit} (${kg.toFixed(1)} kg)
+Activity level: ${S.activity}
+Goal: ${S.goal}L water / day
+
+=== TODAY'S DATA (${new Date().toDateString()}) ===
+Water logged: ${t.toFixed(2)}L (${pct}% of goal, ${pct >= 100 ? "GOAL HIT ✅" : (S.goal - t).toFixed(2) + "L remaining"})
+Creatine: ${S.creatineServings} serving(s) = ${S.creatineServings * 5}g ${S.creatineServings === 0 ? "(not yet logged)" : "✅"}
+Phase: ${S.loadingPhase ? "Loading (20g/day target)" : "Maintenance (5g/day)"}
+Workout day: ${S.workoutDay ? "Yes 💪" : "No"}
+Wellness score: ${ws}/100
+
+=== HISTORY ===
+Days tracked: ${S.history.length}
+Hydration streak: ${str.w} days
+Creatine streak: ${str.c} days
+Avg water (last 7 days): ${avgWater}L
+Creatine consistency: ${S.history.length > 0 ? Math.round(creatineDays/S.history.length*100) : 0}% of tracked days
+Estimated creatine muscle saturation: ~${saturation}%
+
+=== CALCULATED TARGETS ===
+TDEE estimate: ~${tdee} kcal/day
+Daily protein target: ~${protein}g/day
+Optimal water: ${(kg * 0.035).toFixed(1)}L base${S.workoutDay ? " + 0.5L workout = " + (kg * 0.035 + 0.5).toFixed(1) + "L" : ""}
+
+=== COACHING STYLE ===
+- Warm, direct, motivating — like a knowledgeable friend who is also their trainer
+- Always reference their ACTUAL numbers, never generic advice
+- Be concise (2-4 sentences) unless they ask for detail
+- Use emojis naturally but sparingly
+- Celebrate specific wins ("You've hit 85% today — almost there!")
+- If they're behind, give ONE clear actionable next step
+- Deep knowledge of creatine: timing, saturation, loading, water requirements, caffeine interactions
+- Deep knowledge of hydration: electrolytes, performance impact, optimal timing
+- Basic sports nutrition: protein synthesis, TDEE, macros, meal timing
+- Give real answers to supplement/hydration questions
+- If asked something off-topic: "I'm best at health coaching — want to talk about your ${t.toFixed(1)}L hydration today?"`;
+}
+
+async function callClaudeCoach(userMessage) {
+  const key = getApiKey();
+  if (!key) return null;
+  chatHistory.push({ role: "user", content: userMessage });
+  const resp = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": key,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true",
+    },
+    body: JSON.stringify({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 400,
+      system: buildSystemPrompt(),
+      messages: chatHistory,
+    }),
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err.error?.message || `API error ${resp.status}`);
+  }
+  const data = await resp.json();
+  const reply = data.content[0].text;
+  chatHistory.push({ role: "assistant", content: reply });
+  return reply;
+}
+
+function addChatMsg(html, role = "bot") {
+  const msgs = document.getElementById("coach-messages");
+  if (!msgs) return;
+  const div = document.createElement("div");
+  div.className = `cp-msg ${role}`;
+  div.innerHTML = html;
+  msgs.appendChild(div);
+  msgs.scrollTo({ top: msgs.scrollHeight, behavior: "smooth" });
+}
+
+function showTyping() {
+  const msgs = document.getElementById("coach-messages");
+  if (!msgs) return;
+  const div = document.createElement("div");
+  div.className = "typing-indicator";
+  div.id = "typing-indicator";
+  div.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+  msgs.appendChild(div);
+  msgs.scrollTo({ top: msgs.scrollHeight, behavior: "smooth" });
+}
+
+function removeTyping() {
+  document.getElementById("typing-indicator")?.remove();
+}
+
+function ruleBasedReply(msg) {
+  const m = msg.toLowerCase();
+  const t = total(S), pct = Math.round(t / S.goal * 100);
+  const str = streaks(S.history);
+  const kg = S.weightUnit === "lbs" ? S.weight / 2.205 : S.weight;
+
+  if (m.includes("creatine") && (m.includes("when") || m.includes("time") || m.includes("best")))
+    return `Best time is post-workout with carbs — this spikes insulin and drives creatine into muscle cells. You've taken ${S.creatineServings * 5}g today. ${S.creatineServings === 0 ? "Haven't logged today yet!" : "✅ Solid."}`;
+  if (m.includes("how much water") || m.includes("how many liters"))
+    return `Your goal is ${S.goal}L/day. Based on your ${S.weight}${S.weightUnit} body weight and ${S.activity} activity, ${(kg * 0.035).toFixed(1)}L is your optimal minimum${S.workoutDay ? ` +0.5L for today's workout = ${(kg * 0.035 + 0.5).toFixed(1)}L` : ""}.`;
+  if (m.includes("streak"))
+    return `You're on a ${str.w}-day hydration streak 🔥 and a ${str.c}-day creatine streak. ${str.w >= 7 ? "That's elite consistency." : str.w >= 3 ? "Building momentum!" : "Keep going — 3 days builds the habit."}`;
+  if (m.includes("weight") || m.includes("bmi"))
+    return `At ${S.weight}${S.weightUnit}, your daily targets are ~${Math.round(kg * ({sedentary:1.4,light:1.6,moderate:1.8,active:2.0,athlete:2.2}[S.activity]||1.8))}g protein and ~${(kg * 0.035).toFixed(1)}L water. Log your weight daily in Supps to track trends.`;
+  if (m.includes("caffeine") || m.includes("coffee"))
+    return `Heads up: caffeine and creatine may reduce each other's effectiveness when taken together. Space them at least 1 hour apart. Coffee/tea counts at 80–90% toward your hydration goal.`;
+  if (m.includes("load") || m.includes("loading phase"))
+    return `Loading phase: 20g/day (4×5g) for 5–7 days saturates muscles ~30% faster. After that, 3–5g/day maintains saturation. ${S.loadingPhase ? "You're currently loading!" : "Enable it in the Supps page."}`;
+  if (m.includes("sleep"))
+    return `Sleep is when creatine and protein synthesis does its best work. Aim for 7–9 hours. Being well-hydrated before bed improves sleep quality — you're at ${pct}% of your goal today.`;
+  if (m.includes("protein"))
+    return `At ${S.weight}${S.weightUnit} with ${S.activity} activity, target ~${Math.round(kg * ({sedentary:1.4,light:1.6,moderate:1.8,active:2.0,athlete:2.2}[S.activity]||1.8))}g protein/day. Creatine and protein are synergistic.`;
+  if (m.includes("goal") && m.includes("water"))
+    return `${pct >= 100 ? `You've crushed your ${S.goal}L goal today! 🎉` : `You're at ${t.toFixed(2)}L — ${(S.goal - t).toFixed(2)}L left. Try a ${pct < 50 ? "500ml bottle right now" : "250ml glass"}.`}`;
+  if (m.includes("motivat") || m.includes("inspire"))
+    return `${str.w > 0 ? `${str.w} days of consistent hydration — that's discipline, not luck.` : "Every champion starts at day 0."} Your wellness score is ${Math.min(Math.round(Math.min(t/S.goal,1)*45)+(S.creatineServings>0?20:0)+Math.min(str.w*2,15),100)}/100 today. 💪`;
+  if (m.includes("hello") || m.includes("hi") || m.includes("hey"))
+    return `Hey${S.name ? " " + S.name : ""}! 👋 You're at ${pct}% hydration${S.creatineServings > 0 ? " and creatine is ✅" : " — creatine not logged yet"}. What do you want to work on?`;
+  return `I'm best at helping with hydration, creatine, nutrition, and recovery. You're at ${pct}% of your water goal — want tips on hitting it, or ask about creatine timing, protein, or your streaks?`;
+}
+
+async function sendCoachMessage(text) {
+  if (!text.trim()) return;
+  const input = document.getElementById("coach-input");
+  const sendBtn = document.getElementById("coach-send");
+  if (input) input.value = "";
+  if (sendBtn) sendBtn.disabled = true;
+
+  addChatMsg(text.replace(/</g, "&lt;"), "user");
+  showTyping();
+
+  try {
+    let reply;
+    if (getApiKey()) {
+      reply = await callClaudeCoach(text);
+    } else {
+      await new Promise(r => setTimeout(r, 600 + Math.random() * 400));
+      reply = ruleBasedReply(text);
+    }
+    removeTyping();
+    addChatMsg(reply.replace(/\n/g, "<br>"), "bot");
+  } catch (err) {
+    removeTyping();
+    const isAuthErr = err.message?.includes("401") || err.message?.toLowerCase().includes("auth");
+    addChatMsg(isAuthErr
+      ? "⚠️ API key error — check your key in Settings → AI Coach."
+      : `⚠️ ${err.message || "Couldn't reach AI — check your connection."}`,
+      "bot"
+    );
+  } finally {
+    if (sendBtn) sendBtn.disabled = false;
+    if (input) input.focus();
+  }
+}
+
+// Override openCoach with personalized welcome
+function openCoach() {
+  const panel = document.getElementById("coach-panel");
+  if (!panel) return;
+  panel.classList.remove("hidden");
+  const msgs = document.getElementById("coach-messages");
+  if (msgs && msgs.children.length === 0) {
+    chatHistory = [];
+    const ws = calcWellness();
+    const pct = Math.round(total(S) / S.goal * 100);
+    const str = streaks(S.history);
+    const hasKey = !!getApiKey();
+    addChatMsg(
+      `Hey${S.name ? " <strong>" + S.name + "</strong>" : ""}! 👋 I'm your Oasis Coach.<br><br>` +
+      `📊 Today: <strong>${pct}%</strong> hydrated · <strong>${S.creatineServings * 5}g</strong> creatine · Wellness <strong>${ws}/100</strong><br>` +
+      `🔥 Streaks: <strong>${str.w}d</strong> water · <strong>${str.c}d</strong> creatine<br><br>` +
+      (hasKey
+        ? `I'm powered by Claude AI — ask me <em>anything</em> about your health.`
+        : `Smart mode active. Add an Anthropic API key in Settings for full AI.<br><em>Try: "Should I take creatine before or after workout?"</em>`),
+      "bot"
+    );
+  }
+}
+
+function setupApiKeyEvents() {
+  const btn = document.getElementById("save-api-key-btn");
+  const inp = document.getElementById("s-api-key");
+  const status = document.getElementById("api-key-status");
+
+  btn?.addEventListener("click", async () => {
+    const key = inp?.value.trim();
+    if (!key) { if (status) { status.textContent = "Enter a key first."; status.className = "api-status api-err"; } return; }
+    if (status) { status.textContent = "Verifying..."; status.className = "api-status"; }
+    try {
+      const r = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true" },
+        body: JSON.stringify({ model:"claude-haiku-4-5-20251001", max_tokens:10, messages:[{role:"user",content:"hi"}] })
+      });
+      const d = await r.json().catch(() => ({}));
+      if (r.ok || d.error?.type !== "authentication_error") {
+        localStorage.setItem("oasis_api_key", key);
+        if (status) { status.textContent = "✅ API key saved — AI Coach enabled!"; status.className = "api-status api-ok"; }
+        toast("🤖 AI Coach powered by Claude!", "success");
+      } else { throw new Error("Invalid key"); }
+    } catch {
+      localStorage.setItem("oasis_api_key", key);
+      if (status) { status.textContent = "Key saved (verify on first chat)"; status.className = "api-status"; }
+    }
+  });
+
+  if (inp) { const k = getApiKey(); if (k) inp.value = k.slice(0,12) + "••••••••"; }
+  if (status && getApiKey()) { status.textContent = "✅ API key active"; status.className = "api-status api-ok"; }
+}
+
+function setupChatEvents() {
+  const inp = document.getElementById("coach-input");
+  const btn = document.getElementById("coach-send");
+  const send = () => sendCoachMessage(inp?.value || "");
+  btn?.addEventListener("click", send);
+  inp?.addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } });
+
+  const topicMap = {
+    hydration:  "How am I doing on hydration today and what should I do next?",
+    creatine:   "Give me personalized creatine advice based on my current data.",
+    body:       "What are my body composition targets based on my profile?",
+    plan:       "Give me a complete action plan for the rest of today.",
+    motivation: "I need motivation based on my actual progress.",
+  };
+  // Replace old static topic listeners with chat-sending ones
+  document.querySelectorAll(".cp-action-btn").forEach(btn => {
+    const nb = btn.cloneNode(true);
+    btn.parentNode.replaceChild(nb, btn);
+    nb.addEventListener("click", () => {
+      const msg = topicMap[nb.dataset.topic];
+      if (msg) sendCoachMessage(msg);
+    });
+  });
+}
+
+setupApiKeyEvents();
+setupChatEvents();
