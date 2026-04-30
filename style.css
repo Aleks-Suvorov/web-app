@@ -137,6 +137,17 @@ a{color:inherit}
 .wbar.today{background:linear-gradient(to top,#0ea5e9,var(--green));box-shadow:0 0 8px var(--blue)}
 .week-labels{display:flex;gap:4px;padding:0 2px;margin-top:4px}
 .wlabel{flex:1;text-align:center;font-size:9px;color:var(--muted);font-weight:600}
+/* daily insight */
+.insight-card{background:linear-gradient(135deg,#061525,#0a1f3a);border:1px solid rgba(56,189,248,.15)}
+.insight-top{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.insight-icon{font-size:22px}
+.insight-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+.insight-text{font-size:14px;font-weight:500;line-height:1.65;color:#cce4ff}
+.insight-action{font-size:12px;font-weight:700;color:var(--blue);margin-top:8px}
+[data-theme="light"] .insight-card{background:linear-gradient(135deg,#dbeafe,#e0f2fe);border-color:rgba(56,189,248,.3)}
+[data-theme="light"] .insight-text{color:#1e3a5f}
+[data-theme="light"] .insight-action{color:#0369a1}
+
 /* quote */
 .quote-card{background:linear-gradient(135deg,#0c1a3a,#0f2150);border:1px solid rgba(56,189,248,.2);position:relative;overflow:hidden}
 .quote-bg-icon{position:absolute;top:-10px;left:10px;font-size:100px;opacity:.07;font-family:Georgia,serif;line-height:1;pointer-events:none}

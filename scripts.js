@@ -152,6 +152,57 @@ function updateDash(){
   // workout toggle sync
   const wt=document.getElementById("workout-toggle");if(wt)wt.checked=S.workoutDay;
   renderWeekBars();
+  renderDailyInsight();
+}
+
+function renderDailyInsight(){
+  const el=document.getElementById("insight-text");
+  const ac=document.getElementById("insight-action");
+  const ic=document.getElementById("insight-icon");
+  if(!el)return;
+  const t=total(S),pct=Math.round(t/S.goal*100);
+  const str=streaks(S.history);
+  const kg=S.weightUnit==="lbs"?S.weight/2.205:S.weight;
+  const hr=new Date().getHours();
+  const creatineDays=S.history.filter(d=>d.c>0).length;
+  const satEst=Math.min(Math.round(creatineDays/28*100),100);
+
+  // Priority-ordered insights based on current state
+  if(pct>=100&&S.creatineServings>0){
+    ic.textContent="🏆";
+    el.textContent=`You've hit both targets today! Hydration is full and creatine is logged. Your consistency over ${S.history.length} days is building real results.`;
+    ac.textContent="Keep this up — come back tomorrow.";
+  } else if(hr>=20&&pct<80){
+    ic.textContent="🌙";
+    const need=(S.goal-t).toFixed(2);
+    el.textContent=`It's evening and you're at ${pct}% of your water goal. You need ${need}L to hit your target tonight.`;
+    ac.textContent=`→ Try ${pct<50?"two 500ml glasses":"one large glass"} before bed.`;
+  } else if(S.creatineServings===0&&hr>=10){
+    ic.textContent="💊";
+    el.textContent=`You haven't logged creatine today. ${satEst<80?`You're ~${satEst}% saturated — consistency is key to reaching peak saturation.`:"You're well saturated — keep the daily habit going."}`;
+    ac.textContent="→ Log your 5g serving now.";
+  } else if(str.w>=7){
+    ic.textContent="🔥";
+    el.textContent=`${str.w}-day hydration streak! That's a genuine habit now. Research shows consistent hydration improves cognitive performance by 10–15%.`;
+    ac.textContent="→ Keep the streak alive — log water now if you haven't.";
+  } else if(pct<30&&hr>=12){
+    ic.textContent="⚠️";
+    el.textContent=`It's midday and you're only at ${pct}% hydration. Mild dehydration (as little as 2%) reduces strength output and focus.`;
+    ac.textContent=`→ Drink 500ml right now to get back on track.`;
+  } else if(S.workoutDay&&pct<50){
+    ic.textContent="💪";
+    el.textContent=`Workout day! You need an extra 0.5L today. You're currently at ${pct}% — pre-workout hydration directly impacts performance by 5–10%.`;
+    ac.textContent="→ Log a bottle before you hit the gym.";
+  } else if(S.history.length===0){
+    ic.textContent="🌱";
+    el.textContent="Welcome to Oasis! Log water and creatine consistently for 3 days and your stats, trends, and streaks will come alive.";
+    ac.textContent="→ Start by logging today's water above.";
+  } else {
+    ic.textContent="💡";
+    const remaining=(S.goal-t).toFixed(2);
+    el.textContent=`You're at ${pct}% today${str.w>0?`, on a ${str.w}-day streak`:""}.${S.creatineServings>0?" Creatine is done.":""}${pct<100?` You need ${remaining}L more to hit your goal.`:" Goal hit!"}`;
+    ac.textContent=pct<100?`→ ${pct<50?"Log a 500ml drink to build momentum.":"Almost there — log your next drink."}`:str.c>0?"→ Great day all around. Rest and recover.":"→ Don't forget creatine before the day ends.";
+  }
 }
 
 function renderWeekBars(){
