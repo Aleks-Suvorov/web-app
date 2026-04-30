@@ -771,6 +771,7 @@ function openCoach(){
 
 function closeCoach(){
   document.getElementById("coach-panel")?.classList.add("hidden");
+  document.body.style.overflow="";
 }
 
 // === PRO + COACH EVENTS ===
@@ -1013,6 +1014,7 @@ function openCoach() {
   const panel = document.getElementById("coach-panel");
   if (!panel) return;
   panel.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
   const msgs = document.getElementById("coach-messages");
   if (msgs && msgs.children.length === 0) {
     chatHistory = [];
