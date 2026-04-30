@@ -1,31 +1,148 @@
-/* === VARIABLES === */
+/* ═══════════════════════════════════════════════════════════════
+   OASIS — LUXURY DESIGN SYSTEM v3
+   Tokens: color · glass · typography · spacing · motion · z-index
+═══════════════════════════════════════════════════════════════ */
+
 :root {
-  --bg:       #060d1a;
-  --s1:       #0d1829;
-  --s2:       #13223a;
-  --s3:       #1a2f50;
-  --border:   rgba(255,255,255,0.08);
-  --text:     #f0f6ff;
-  --muted:    #6b86a8;
-  --blue:     #38bdf8;
-  --blue2:    #0369a1;
-  --green:    #4ade80;
-  --purple:   #c084fc;
-  --orange:   #fb923c;
-  --red:      #f87171;
-  --radius:   16px;
-  --radius-s: 10px;
-  --nav-h:    64px;
-  --hdr-h:    54px;
+  /* ── Palette ── */
+  --col-bg:       #050c18;       /* deepest background */
+  --col-deep:     #070f1e;       /* layer 0 */
+  --col-surface:  #0c1829;       /* layer 1: card bg */
+  --col-raised:   #111f35;       /* layer 2: input/chip bg */
+  --col-high:     #1a2f4a;       /* layer 3: hover/active */
+
+  --col-text:     #e8f2ff;       /* primary text */
+  --col-muted:    #5a7599;       /* secondary text */
+  --col-subtle:   #3a5272;       /* tertiary / dividers */
+
+  /* ── Brand accents ── */
+  --col-cyan:     #00d4ff;       /* primary accent — water */
+  --col-cyan2:    #0099cc;       /* deep cyan */
+  --col-violet:   #a78bfa;       /* secondary — creatine */
+  --col-violet2:  #7c3aed;       /* deep violet */
+  --col-green:    #34d399;       /* success / goal hit */
+  --col-amber:    #fbbf24;       /* pro / premium */
+  --col-rose:     #f87171;       /* danger */
+  --col-teal:     #2dd4bf;       /* stat accent */
+
+  /* ── Glass system ── */
+  --glass-bg:         rgba(255,255,255,0.04);
+  --glass-bg-strong:  rgba(255,255,255,0.07);
+  --glass-bg-raised:  rgba(255,255,255,0.10);
+  --glass-border:     rgba(255,255,255,0.09);
+  --glass-border-hi:  rgba(255,255,255,0.16);
+  --glass-shadow:     0 8px 32px rgba(0,0,0,0.45), 0 2px 8px rgba(0,0,0,0.3);
+  --glass-shadow-lg:  0 20px 60px rgba(0,0,0,0.6), 0 4px 16px rgba(0,0,0,0.4);
+  --glass-blur:       blur(24px);
+  --glass-blur-sm:    blur(12px);
+  --glass-highlight:  inset 0 1px 0 rgba(255,255,255,0.12);
+
+  /* ── Glow tokens ── */
+  --glow-cyan:    0 0 20px rgba(0,212,255,0.35), 0 0 60px rgba(0,212,255,0.12);
+  --glow-violet:  0 0 20px rgba(167,139,250,0.35), 0 0 60px rgba(167,139,250,0.12);
+  --glow-green:   0 0 16px rgba(52,211,153,0.4);
+  --glow-amber:   0 0 20px rgba(251,191,36,0.4);
+
+  /* ── Typography ── */
+  --font:         'Inter', system-ui, -apple-system, sans-serif;
+  --text-xs:      clamp(10px, 2.5vw, 11px);
+  --text-sm:      clamp(12px, 3vw, 13px);
+  --text-base:    clamp(13px, 3.5vw, 14px);
+  --text-md:      clamp(15px, 4vw, 16px);
+  --text-lg:      clamp(18px, 4.5vw, 20px);
+  --text-xl:      clamp(22px, 5.5vw, 26px);
+  --text-2xl:     clamp(28px, 7vw, 36px);
+  --text-3xl:     clamp(36px, 9vw, 48px);
+
+  /* ── Spacing (4px base) ── */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+
+  /* ── Radii ── */
+  --r-sm:   10px;
+  --r-md:   16px;
+  --r-lg:   22px;
+  --r-xl:   28px;
+  --r-full: 9999px;
+
+  /* ── Layout ── */
+  --nav-h:  64px;
+  --hdr-h:  56px;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-t: env(safe-area-inset-top, 0px);
+
+  /* ── Motion ── */
+  --ease-spring:  cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out:     cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out:  cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast:     180ms;
+  --dur-base:     280ms;
+  --dur-slow:     420ms;
+  --dur-enter:    500ms;
+
+  /* ── Z-index layers ── */
+  --z-bg:     -1;
+  --z-base:    0;
+  --z-card:   10;
+  --z-sticky: 20;
+  --z-nav:    30;
+  --z-fab:    40;
+  --z-panel:  50;
+  --z-modal: 100;
+  --z-toast: 200;
+  --z-top:   999;
+
+  /* ── Legacy aliases (keep JS working) ── */
+  --bg:      var(--col-bg);
+  --s1:      var(--col-surface);
+  --s2:      var(--col-raised);
+  --s3:      var(--col-high);
+  --border:  var(--glass-border);
+  --text:    var(--col-text);
+  --muted:   var(--col-muted);
+  --blue:    var(--col-cyan);
+  --blue2:   var(--col-cyan2);
+  --green:   var(--col-green);
+  --purple:  var(--col-violet);
+  --orange:  #fb923c;
+  --red:     var(--col-rose);
+  --radius:  var(--r-md);
+  --radius-s:var(--r-sm);
 }
+
+/* ── Light mode override ── */
 [data-theme="light"] {
-  --bg:     #eef2f7;
-  --s1:     #ffffff;
-  --s2:     #f4f7fb;
-  --s3:     #e8edf5;
-  --border: rgba(0,0,0,0.08);
-  --text:   #0f1f35;
-  --muted:  #7a90aa;
+  --col-bg:       #eef4fc;
+  --col-deep:     #e4ecf8;
+  --col-surface:  #ffffff;
+  --col-raised:   #f0f5fc;
+  --col-high:     #e2ecf8;
+  --col-text:     #0d1e35;
+  --col-muted:    #6b85a8;
+  --col-subtle:   #a0bcd8;
+  --glass-bg:         rgba(255,255,255,0.7);
+  --glass-bg-strong:  rgba(255,255,255,0.85);
+  --glass-bg-raised:  rgba(255,255,255,0.92);
+  --glass-border:     rgba(0,0,0,0.08);
+  --glass-border-hi:  rgba(0,0,0,0.14);
+  --glass-shadow:     0 4px 20px rgba(0,50,120,0.10), 0 1px 4px rgba(0,0,0,0.06);
+  --glass-shadow-lg:  0 12px 40px rgba(0,50,120,0.15), 0 2px 8px rgba(0,0,0,0.08);
+  --glass-highlight:  inset 0 1px 0 rgba(255,255,255,0.9);
+  --glow-cyan:    0 0 12px rgba(0,150,200,0.2);
+  --glow-violet:  0 0 12px rgba(120,80,200,0.2);
+  --bg:      var(--col-bg);
+  --s1:      var(--col-surface);
+  --s2:      var(--col-raised);
+  --s3:      var(--col-high);
+  --border:  var(--glass-border);
+  --text:    var(--col-text);
+  --muted:   var(--col-muted);
 }
 
 /* === RESET & BASE === */
@@ -39,12 +156,12 @@ a{color:inherit}
 #app{height:100dvh;display:flex;flex-direction:column;overflow:hidden}
 
 /* === HEADER === */
-#app-header{height:var(--hdr-h);flex-shrink:0;background:var(--s1);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:30}
-.hdr-left{display:flex;align-items:center;gap:8px}
+#app-header{height:calc(var(--hdr-h) + var(--safe-t));flex-shrink:0;background:var(--col-surface);border-bottom:1px solid var(--glass-border);display:flex;align-items:flex-end;justify-content:space-between;padding:0 var(--sp-4) 0;padding-top:var(--safe-t);padding-bottom:0;z-index:var(--z-nav)}
+.hdr-left{display:flex;align-items:center;gap:var(--sp-2);height:var(--hdr-h)}
 .hdr-logo{font-size:22px;animation:sway 3s ease-in-out infinite}
 @keyframes sway{0%,100%{transform:rotate(0)}30%{transform:rotate(-12deg)}70%{transform:rotate(12deg)}}
 .hdr-title{font-size:19px;font-weight:800;background:linear-gradient(135deg,var(--blue),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.hdr-right{display:flex;align-items:center;gap:8px}
+.hdr-right{display:flex;align-items:center;gap:var(--sp-2);height:var(--hdr-h)}
 .streak-badge{display:flex;align-items:center;gap:4px;background:linear-gradient(135deg,#f97316,#dc2626);color:#fff;font-size:13px;font-weight:700;padding:5px 11px;border-radius:20px}
 .streak-badge i{font-size:11px}
 .hdr-icon-btn{width:36px;height:36px;border-radius:50%;background:var(--s2);border:1px solid var(--border);color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:14px;transition:background .2s,color .2s}
@@ -55,10 +172,10 @@ a{color:inherit}
 .page{display:none;height:100%;overflow-y:auto;overflow-x:hidden}
 .page.active{display:flex;flex-direction:column;animation:pagein .22s ease}
 @keyframes pagein{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-.scroll-wrap{padding:14px 14px calc(var(--nav-h) + 14px);max-width:500px;margin:0 auto;display:flex;flex-direction:column;gap:12px;width:100%}
+.scroll-wrap{padding:var(--sp-4) var(--sp-4) calc(var(--nav-h) + var(--safe-b) + 80px);max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:var(--sp-3);width:100%}
 
 /* === BOTTOM NAV === */
-#bottom-nav{height:var(--nav-h);flex-shrink:0;background:var(--s1);border-top:1px solid var(--border);display:flex;align-items:stretch;z-index:30}
+#bottom-nav{height:calc(var(--nav-h) + var(--safe-b));flex-shrink:0;background:var(--col-surface);border-top:1px solid var(--glass-border);display:flex;align-items:flex-start;z-index:var(--z-nav);padding-bottom:var(--safe-b)}
 .nb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:none;border:none;color:var(--muted);font-size:10px;font-weight:600;position:relative;transition:color .2s;padding:6px 0}
 .nb i{font-size:20px;transition:transform .2s}
 .nb.active{color:var(--blue)}
@@ -170,7 +287,7 @@ a{color:inherit}
 .big-ring-svg{display:block}
 .big-ring-track{fill:none;stroke:var(--s3);stroke-width:14}
 .big-ring-prog{fill:none;stroke-width:14;stroke-linecap:round;transition:stroke-dashoffset .8s cubic-bezier(.4,0,.2,1)}
-.big-ring-center{margin-top:-190px;margin-bottom:170px;display:flex;flex-direction:column;align-items:center;pointer-events:none}
+/* .big-ring-center — old broken hack removed; see RING FIX below */
 .ring-big-num{font-size:42px;font-weight:900;color:var(--blue);line-height:1;transition:color .4s}
 .ring-big-num.goal-hit{color:var(--green)}
 .ring-unit{font-size:13px;color:var(--muted);margin-top:2px}
@@ -280,7 +397,7 @@ a{color:inherit}
 .modal-btn.secondary{background:var(--s2);color:var(--muted);border:1px solid var(--border)}
 
 /* === TOASTS === */
-#toasts{position:fixed;bottom:calc(var(--nav-h)+12px);left:50%;transform:translateX(-50%);z-index:200;display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none;width:90%;max-width:360px}
+#toasts{position:fixed;bottom:calc(var(--nav-h) + var(--safe-b) + 12px);left:50%;transform:translateX(-50%);z-index:var(--z-toast);display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none;width:90%;max-width:360px}
 .toast{background:var(--s1);border:1px solid var(--border);border-radius:22px;padding:10px 20px;font-size:13px;font-weight:600;box-shadow:0 8px 30px rgba(0,0,0,.3);opacity:0;transform:translateY(10px) scale(.95);transition:opacity .3s,transform .3s;text-align:center}
 .toast.show{opacity:1;transform:translateY(0) scale(1)}
 .toast.info{border-color:var(--blue);background:rgba(56,189,248,.1)}
@@ -357,8 +474,8 @@ a{color:inherit}
 .pp-warn{color:var(--orange)!important}
 
 /* === COACH FAB === */
-.coach-fab{position:fixed;bottom:calc(var(--nav-h) + 14px);right:14px;background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;border:none;border-radius:28px;padding:10px 16px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px;box-shadow:0 6px 24px rgba(124,58,237,.5);z-index:40;cursor:pointer;font-family:'Inter',sans-serif;transition:transform .2s,box-shadow .2s}
-.coach-fab:active{transform:scale(.95)}
+.coach-fab{position:fixed;bottom:calc(var(--nav-h) + var(--safe-b) + 14px);right:var(--sp-4);background:linear-gradient(135deg,var(--col-violet2),#4f46e5);color:#fff;border:none;border-radius:var(--r-full);padding:11px 18px;font-size:var(--text-sm);font-weight:700;display:flex;align-items:center;gap:var(--sp-2);box-shadow:var(--glow-violet),var(--glass-shadow);z-index:var(--z-fab);cursor:pointer;font-family:var(--font);transition:transform var(--dur-base) var(--ease-spring),box-shadow var(--dur-base) var(--ease-out)}
+.coach-fab:active{transform:scale(.93)}
 .coach-fab i{font-size:16px}
 .fab-label{font-size:12px}
 .pro-badge-fab{font-size:9px;font-weight:900;background:rgba(255,255,255,.2);padding:2px 6px;border-radius:10px}
@@ -399,7 +516,7 @@ a{color:inherit}
 .upgrade-cta:active{transform:scale(.97)}
 
 /* === COACH CHAT INPUT === */
-.cp-input-row{display:flex;gap:8px;padding:10px 14px 12px;background:var(--s1);border-top:1px solid var(--border);flex-shrink:0}
+.cp-input-row{display:flex;gap:var(--sp-2);padding:var(--sp-3) var(--sp-4);padding-bottom:calc(var(--sp-3) + var(--safe-b));background:var(--col-surface);border-top:1px solid var(--glass-border);flex-shrink:0}
 .coach-input{flex:1;padding:11px 14px;background:var(--s2);border:1.5px solid var(--border);border-radius:24px;font-size:14px;outline:none;transition:border-color .2s;color:var(--text)}
 .coach-input:focus{border-color:var(--purple)}
 .coach-send-btn{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;border:none;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;transition:transform .15s,box-shadow .15s;box-shadow:0 4px 12px rgba(124,58,237,.4)}
