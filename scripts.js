@@ -1,4 +1,93 @@
-// === OASIS v2 ===
+// === OASIS v3 ===
+
+// ── Ambient Background System ──────────────────────────────────────────────
+(function initAmbientBg(){
+  const cv = document.getElementById("oasis-bg");
+  if (!cv) return;
+
+  // Respect reduced motion
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduced) return;
+
+  const ctx = cv.getContext("2d");
+  let W, H, orbs, particles, raf;
+
+  function resize(){
+    W = cv.width  = window.innerWidth;
+    H = cv.height = window.innerHeight;
+    buildOrbs();
+  }
+
+  function buildOrbs(){
+    const light = document.documentElement.getAttribute("data-theme") === "light";
+    orbs = [
+      { x:W*0.18, y:H*0.12, r:W*0.55, ox:W*0.18, oy:H*0.12,
+        vx:0.12, vy:0.07,
+        c: light ? "rgba(0,160,230,0.10)" : "rgba(0,180,255,0.13)" },
+      { x:W*0.82, y:H*0.80, r:W*0.45, ox:W*0.82, oy:H*0.80,
+        vx:-0.09, vy:-0.11,
+        c: light ? "rgba(100,60,200,0.07)" : "rgba(130,80,255,0.11)" },
+      { x:W*0.55, y:H*0.45, r:W*0.30, ox:W*0.55, oy:H*0.45,
+        vx:0.06, vy:0.09,
+        c: light ? "rgba(0,200,180,0.05)" : "rgba(0,220,200,0.07)" },
+    ];
+
+    // Lightweight floating particles (bubbles/flecks)
+    particles = Array.from({length: 28}, () => ({
+      x: Math.random() * W,
+      y: H + Math.random() * H * 0.3,
+      r: 0.8 + Math.random() * 2.2,
+      vy: -(0.15 + Math.random() * 0.35),
+      vx: (Math.random() - 0.5) * 0.2,
+      opacity: 0.06 + Math.random() * 0.14,
+      pulse: Math.random() * Math.PI * 2,
+    }));
+  }
+
+  let t = 0;
+  function draw(){
+    ctx.clearRect(0, 0, W, H);
+    t += 0.003;
+
+    // Draw slow-moving glow orbs
+    orbs.forEach(o => {
+      o.x = o.ox + Math.sin(t * o.vx * 3) * W * 0.06;
+      o.y = o.oy + Math.cos(t * o.vy * 3) * H * 0.05;
+      const g = ctx.createRadialGradient(o.x, o.y, 0, o.x, o.y, o.r);
+      g.addColorStop(0, o.c);
+      g.addColorStop(1, "transparent");
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(o.x, o.y, o.r, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // Draw floating particles
+    const light = document.documentElement.getAttribute("data-theme") === "light";
+    const pc = light ? "rgba(0,140,210," : "rgba(120,200,255,";
+    particles.forEach(p => {
+      p.y += p.vy;
+      p.x += p.vx;
+      p.pulse += 0.02;
+      const op = p.opacity * (0.7 + 0.3 * Math.sin(p.pulse));
+      if (p.y < -20) { p.y = H + 10; p.x = Math.random() * W; }
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = pc + op + ")";
+      ctx.fill();
+    });
+
+    raf = requestAnimationFrame(draw);
+  }
+
+  window.addEventListener("resize", resize, { passive: true });
+  // Rebuild orbs when theme changes
+  const obs = new MutationObserver(() => buildOrbs());
+  obs.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+  resize();
+  draw();
+})();
 
 const QUOTES = [
   {t:"Water is the driving force of all nature.",a:"Leonardo da Vinci"},
