@@ -865,7 +865,7 @@ function buildSystemPrompt() {
     return Math.min(sc, 100);
   })();
 
-  return `You are Oasis Coach — a world-class personal health & performance coach embedded in a gym-focused health tracker app. You have real-time access to this user's exact health data and your job is to give hyper-personalized, science-backed coaching.
+  return `You are Dima (Daily Intelligence & Metrics Assistant) — the AI performance coach inside the Oasis health tracker app. You have real-time access to this user's exact health data. Give hyper-personalized, concise, science-backed coaching. You are NOT a general-purpose AI — stay focused on hydration, creatine, supplements, recovery, body performance, and Oasis app guidance. If asked off-topic questions, redirect warmly to their health data.
 
 === USER PROFILE ===
 Name: ${S.name || "the user"}
@@ -961,35 +961,296 @@ function removeTyping() {
   document.getElementById("typing-indicator")?.remove();
 }
 
-function ruleBasedReply(msg) {
-  const m = msg.toLowerCase();
+// ── DIMA ENGINE (Daily Intelligence & Metrics Assistant) ──────────────────────
+
+function dimaCtx() {
   const t = total(S), pct = Math.round(t / S.goal * 100);
   const str = streaks(S.history);
   const kg = S.weightUnit === "lbs" ? S.weight / 2.205 : S.weight;
+  const remaining = Math.max(0, S.goal - t);
+  const maxServ = S.loadingPhase ? 4 : 1;
+  const crDone = S.creatineServings >= maxServ;
+  const crg = S.creatineServings * 5;
+  const avgWater = S.history.length >= 2
+    ? (S.history.slice(-7).reduce((s, d) => s + (d.w || 0), 0) / Math.min(S.history.length, 7)).toFixed(1)
+    : null;
+  const crDays = S.history.filter(d => d.c > 0).length;
+  const sat = Math.min(Math.round(crDays / 28 * 100), 100);
+  const actMap = {sedentary:1.4,light:1.6,moderate:1.8,active:2.0,athlete:2.2};
+  const protein = Math.round(kg * (actMap[S.activity] || 1.8));
+  const tdee = Math.round(kg * ({sedentary:26,light:30,moderate:35,active:40,athlete:45}[S.activity]||35));
+  const ws = Math.min(Math.round(Math.min(t/S.goal,1)*45) + (S.creatineServings>0?20:0) + Math.min(str.w*2,15) + (S.workoutDay?10:0), 100);
+  const hour = new Date().getHours();
+  const hoursLeft = Math.max(0, 22 - hour);
+  const rateNeeded = hoursLeft > 0 ? remaining / hoursLeft : remaining;
+  const newUser = S.history.length === 0 && t === 0;
+  return { t, pct, str, kg, remaining, maxServ, crDone, crg, avgWater, crDays, sat, protein, tdee, ws, hour, hoursLeft, rateNeeded, newUser };
+}
 
-  if (m.includes("creatine") && (m.includes("when") || m.includes("time") || m.includes("best")))
-    return `Best time is post-workout with carbs — this spikes insulin and drives creatine into muscle cells. You've taken ${S.creatineServings * 5}g today. ${S.creatineServings === 0 ? "Haven't logged today yet!" : "✅ Solid."}`;
-  if (m.includes("how much water") || m.includes("how many liters"))
-    return `Your goal is ${S.goal}L/day. Based on your ${S.weight}${S.weightUnit} body weight and ${S.activity} activity, ${(kg * 0.035).toFixed(1)}L is your optimal minimum${S.workoutDay ? ` +0.5L for today's workout = ${(kg * 0.035 + 0.5).toFixed(1)}L` : ""}.`;
-  if (m.includes("streak"))
-    return `You're on a ${str.w}-day hydration streak 🔥 and a ${str.c}-day creatine streak. ${str.w >= 7 ? "That's elite consistency." : str.w >= 3 ? "Building momentum!" : "Keep going — 3 days builds the habit."}`;
-  if (m.includes("weight") || m.includes("bmi"))
-    return `At ${S.weight}${S.weightUnit}, your daily targets are ~${Math.round(kg * ({sedentary:1.4,light:1.6,moderate:1.8,active:2.0,athlete:2.2}[S.activity]||1.8))}g protein and ~${(kg * 0.035).toFixed(1)}L water. Log your weight daily in Supps to track trends.`;
-  if (m.includes("caffeine") || m.includes("coffee"))
-    return `Heads up: caffeine and creatine may reduce each other's effectiveness when taken together. Space them at least 1 hour apart. Coffee/tea counts at 80–90% toward your hydration goal.`;
-  if (m.includes("load") || m.includes("loading phase"))
-    return `Loading phase: 20g/day (4×5g) for 5–7 days saturates muscles ~30% faster. After that, 3–5g/day maintains saturation. ${S.loadingPhase ? "You're currently loading!" : "Enable it in the Supps page."}`;
-  if (m.includes("sleep"))
-    return `Sleep is when creatine and protein synthesis does its best work. Aim for 7–9 hours. Being well-hydrated before bed improves sleep quality — you're at ${pct}% of your goal today.`;
-  if (m.includes("protein"))
-    return `At ${S.weight}${S.weightUnit} with ${S.activity} activity, target ~${Math.round(kg * ({sedentary:1.4,light:1.6,moderate:1.8,active:2.0,athlete:2.2}[S.activity]||1.8))}g protein/day. Creatine and protein are synergistic.`;
-  if (m.includes("goal") && m.includes("water"))
-    return `${pct >= 100 ? `You've crushed your ${S.goal}L goal today! 🎉` : `You're at ${t.toFixed(2)}L — ${(S.goal - t).toFixed(2)}L left. Try a ${pct < 50 ? "500ml bottle right now" : "250ml glass"}.`}`;
-  if (m.includes("motivat") || m.includes("inspire"))
-    return `${str.w > 0 ? `${str.w} days of consistent hydration — that's discipline, not luck.` : "Every champion starts at day 0."} Your wellness score is ${Math.min(Math.round(Math.min(t/S.goal,1)*45)+(S.creatineServings>0?20:0)+Math.min(str.w*2,15),100)}/100 today. 💪`;
-  if (m.includes("hello") || m.includes("hi") || m.includes("hey"))
-    return `Hey${S.name ? " " + S.name : ""}! 👋 You're at ${pct}% hydration${S.creatineServings > 0 ? " and creatine is ✅" : " — creatine not logged yet"}. What do you want to work on?`;
-  return `I'm best at helping with hydration, creatine, nutrition, and recovery. You're at ${pct}% of your water goal — want tips on hitting it, or ask about creatine timing, protein, or your streaks?`;
+function kwScore(m, words) {
+  let s = 0;
+  for (const w of words) if (m.includes(w)) s += w.includes(" ") ? 4 : w.length > 6 ? 3 : 2;
+  return s;
+}
+
+function dimaIntent(msg) {
+  const m = msg.toLowerCase();
+  const sc = {
+    greet:      kwScore(m, ["hello","hi ","hey ","hey!","good morning","good evening","what's up","sup "]),
+    status:     kwScore(m, ["status","how am i","am i behind","check in","check-in","progress","where am i","overview","update me","how's my"]),
+    hydration:  kwScore(m, ["water","hydrat","drink","fluid","h2o","thirst","how much water","catch up","behind on water","how many liters","how many oz"]),
+    hplan:      kwScore(m, ["plan","schedule","break it down","hit my goal","reach my goal","timing","when should i drink","how do i hit","catch me up on water","hydration plan"]),
+    creatine:   kwScore(m, ["creatine","did i take","creatine today","my creatine","supplement","supp "]),
+    saturation: kwScore(m, ["saturation","saturate","loading phase","loading","how long does creatine","when will i","fully saturated"]),
+    score:      kwScore(m, ["score","wellness score","why is my score","explain my score","what's my score","improve my score","wellness points","why low","why is it low"]),
+    improve:    kwScore(m, ["improve","what should i focus","how to boost","optimize","what's holding","what can i do better","how do i get better","get better","raise my"]),
+    next:       kwScore(m, ["what next","what should i","next step","should i log","do next","right now","what do i do","log next","what can i do now"]),
+    plan:       kwScore(m, ["today's plan","plan for today","full plan","action plan","rest of today","plan my day","what should i do today","daily plan"]),
+    streak:     kwScore(m, ["streak","days in a row","consecutive","broken","start my streak","my streak","keep my streak"]),
+    body:       kwScore(m, ["weight","body comp","bmi","muscle","protein","macro","bulk","cut","lean body","composition","nutrition","diet","fat","calorie","tdee"]),
+    caffeine:   kwScore(m, ["caffeine","coffee","tea ","energy drink","pre-workout","pre workout","espresso"]),
+    sleep:      kwScore(m, ["sleep","rest","recovery","tired","fatigue","recover","bed time","nap","insomnia"]),
+    motivation: kwScore(m, ["motivat","inspir","encourage","hype me","pump me","proud","keep going","push me","cheer"]),
+    history:    kwScore(m, ["last week","last 7","trend","history","average","review my week","how have i been","over time","past days","my progress"]),
+    apphelp:    kwScore(m, ["how do i use","how does","navigate","oasis app","what is the","which tab","which page","how to log","how do i log","help me use"]),
+    pro:        kwScore(m, ["pro ","pro?","premium","upgrade","unlock","subscription","worth it","pro features","what's pro","what is pro"]),
+    who:        kwScore(m, ["who are you","what are you","your name","are you ai","are you real","are you human","dima","what is dima"]),
+  };
+  const best = Object.entries(sc).sort((a,b) => b[1]-a[1])[0];
+  if (best[1] === 0) {
+    const offWords = ["weather","news","president","capital city","write my essay","recipe","movie","politics","stock market","crypto","bitcoin","who won","celebrity","sports score","trivia","age of","year was","what year"];
+    if (kwScore(m, offWords) > 0) return "offtopic";
+    return "unclear";
+  }
+  return best[0];
+}
+
+function dimaReply(intent, ctx) {
+  const { t, pct, str, kg, remaining, maxServ, crDone, crg, avgWater, crDays, sat, protein, tdee, ws, hour, hoursLeft, rateNeeded, newUser } = ctx;
+  const n = S.name ? ` <strong>${S.name}</strong>` : "";
+
+  switch (intent) {
+
+    case "greet": {
+      if (newUser) return `Hey${n}! I'm <strong>Dima</strong>, your Oasis performance coach. 👋<br><br>I'll track your hydration, creatine, and wellness and give you personalized coaching. Try: <em>"What should I do today?"</em> or <em>"Build my hydration plan."</em>`;
+      return `Hey${n}! 👋<br><br>` +
+        `💧 <strong>${pct}%</strong> hydrated (${t.toFixed(2)}/${S.goal}L)${pct < 100 ? ` — ${remaining.toFixed(2)}L left` : " 🎯"}<br>` +
+        `💊 Creatine: ${crDone ? "✅ Done" : "❌ Not logged yet"}<br>` +
+        `🔥 Streak: ${str.w}d water · ${str.c}d creatine<br><br>` +
+        (pct < 50 ? `You're behind on water — want me to build a catch-up plan?` :
+          !crDone ? `Don't forget creatine today — it's 20pts on your wellness score.` :
+          `Looking solid. What do you need?`);
+    }
+
+    case "status": {
+      const rStr = hoursLeft > 1 ? `~${rateNeeded.toFixed(2)}L/hr for the next ${hoursLeft}h` : `finish it before bed`;
+      return `<strong>Status check:</strong><br><br>` +
+        `💧 Water: ${t.toFixed(2)}L / ${S.goal}L — <strong>${pct}%</strong>${pct >= 100 ? " ✅" : `, ${remaining.toFixed(2)}L left`}<br>` +
+        `💊 Creatine: ${S.creatineServings}/${maxServ} serving${maxServ>1?"s":""}${crDone ? " ✅" : " ❌"}<br>` +
+        `🔥 Streaks: ${str.w}d hydration · ${str.c}d creatine<br>` +
+        `⭐ Wellness: <strong>${ws}/100</strong><br><br>` +
+        (pct < 100 ? `To hit goal: drink ${rStr}.` : `Goal complete. Stay consistent tomorrow.`);
+    }
+
+    case "hydration": {
+      if (pct >= 100) return `You've already hit your ${S.goal}L goal today 🎯 ${str.w > 0 ? `That's ${str.w} days in a row — keep going.` : "Nice work!"}`;
+      const steps = [];
+      let left = remaining;
+      if (left >= 0.5) { steps.push(`500ml right now`); left -= 0.5; }
+      if (left >= 0.5) { steps.push(`500ml with your next meal`); left -= 0.5; }
+      if (left >= 0.25) { steps.push(`${Math.round(left * 1000)}ml before 9pm`); left = 0; }
+      if (left > 0) steps.push(`${Math.round(left * 1000)}ml to finish`);
+      return `You're at <strong>${t.toFixed(2)}L</strong> — <strong>${remaining.toFixed(2)}L</strong> from your ${S.goal}L goal.<br><br>` +
+        steps.map(s => `• ${s}`).join("<br>") +
+        (S.workoutDay ? `<br>• +500ml extra for your workout today` : ``) +
+        `<br><br>Sip steadily — don't chug it all at once.`;
+    }
+
+    case "hplan": {
+      if (pct >= 100) return `You've already hit your ${S.goal}L goal — no plan needed today. Just sip normally and repeat tomorrow.`;
+      const slots = [];
+      if (hour < 9)  slots.push({label:"Right now (morning)", ml: Math.round(remaining * 0.3 * 1000)});
+      else if (hour < 12) slots.push({label:"Right now", ml: Math.round(remaining * 0.35 * 1000)});
+      else slots.push({label:"Right now", ml: Math.round(remaining * 0.4 * 1000)});
+      if (hour < 14) slots.push({label:"Lunch", ml: Math.round(remaining * 0.25 * 1000)});
+      if (hour < 18) slots.push({label:"Afternoon", ml: Math.round(remaining * 0.2 * 1000)});
+      slots.push({label:"Evening (before 9pm)", ml: Math.round(remaining * 0.15 * 1000)});
+      const total_planned = slots.reduce((s,sl)=>s+sl.ml,0);
+      const scale = (remaining * 1000) / total_planned;
+      return `<strong>Your hydration plan for today:</strong><br><br>` +
+        slots.map(sl => `• <strong>${sl.label}:</strong> ${Math.round(sl.ml * scale)}ml`).join("<br>") +
+        (S.workoutDay ? `<br>• <strong>Around workout:</strong> +500ml` : ``) +
+        `<br><br>Total left: <strong>${remaining.toFixed(2)}L</strong>. Small consistent sips beat gulping.`;
+    }
+
+    case "creatine": {
+      if (crDone) return `You've taken <strong>${crg}g</strong> creatine today ✅ — ${S.loadingPhase ? "loading phase" : "maintenance"} dose done. Take it with a carb-rich meal for best absorption. ${str.c > 0 ? `${str.c}-day streak 💪` : ""}`;
+      const need = (maxServ - S.creatineServings) * 5;
+      return `You haven't logged creatine yet today — <strong>${need}g</strong> needed${S.loadingPhase ? ` (loading: ${maxServ} servings of 5g spread through the day)` : ""}.<br><br>` +
+        `<strong>Best timing:</strong> post-workout with food. The insulin spike from carbs drives creatine into muscle cells faster.<br><br>` +
+        `Your consistency so far: ${crDays > 0 ? `${crDays}/${S.history.length} tracked days — estimated muscle saturation <strong>~${sat}%</strong>` : "no days logged yet — start today"}.`;
+    }
+
+    case "saturation": {
+      return `Creatine takes ~<strong>28 days</strong> of consistent daily dosing to fully saturate muscles.<br><br>` +
+        `Your history: <strong>${crDays} days</strong> logged → estimated saturation <strong>~${sat}%</strong>.<br><br>` +
+        (S.loadingPhase
+          ? `You're in <strong>loading phase</strong> (20g/day) — this saturates ~30% faster, reaching full saturation in 5–7 days.`
+          : `At 5g/day (maintenance), full saturation takes ~28 days. <strong>Loading phase</strong> (20g/day for 5–7 days) gets there faster — toggle it in the Supps page.`);
+    }
+
+    case "score": {
+      const hyPts = Math.round(Math.min(t/S.goal,1)*45);
+      const crPts = S.creatineServings > 0 ? 20 : 0;
+      const stPts = Math.min(str.w*2, 15);
+      const wkPts = S.workoutDay ? 10 : 0;
+      return `Your wellness score is <strong>${ws}/100</strong>. Here's the breakdown:<br><br>` +
+        `• 💧 Hydration: <strong>${hyPts}/45</strong> pts (${pct}% of goal)<br>` +
+        `• 💊 Creatine: <strong>${crPts}/20</strong> pts${crPts===0?" — log today to earn these":""}<br>` +
+        `• 🔥 Streak: <strong>${stPts}/15</strong> pts (${str.w} days)<br>` +
+        `• 🏋️ Workout: <strong>${wkPts}/10</strong> pts<br><br>` +
+        (100-ws > 0 ? `Biggest quick win: ${crPts===0?"log creatine (+20pts)":pct<100?`drink ${remaining.toFixed(2)}L more (+${45-hyPts}pts)`:str.w<7?"maintain your streak daily":wkPts===0?"mark a workout day (+10pts)":"keep it up"}.` : `Perfect score today 🎯`);
+    }
+
+    case "improve": {
+      const hyPts = Math.round(Math.min(t/S.goal,1)*45);
+      const crPts = S.creatineServings > 0 ? 20 : 0;
+      const stPts = Math.min(str.w*2,15);
+      const wkPts = S.workoutDay ? 10 : 0;
+      const gaps = [
+        {label:"Drink more water", gain:45-hyPts, action:`${remaining.toFixed(2)}L left — drink 500ml right now`},
+        {label:"Log creatine", gain:20-crPts, action:"Open Supps tab, takes 10 seconds"},
+        {label:"Build your streak", gain:15-stPts, action:`Hit goal every day — you're at ${str.w} days`},
+        {label:"Log a workout day", gain:10-wkPts, action:"Toggle it in Dashboard if you trained today"},
+      ].filter(g=>g.gain>0).sort((a,b)=>b.gain-a.gain);
+      if (!gaps.length) return `You're at <strong>${ws}/100</strong> — that's a perfect day. Just do the same thing tomorrow.`;
+      const top = gaps[0];
+      return `Biggest gain right now: <strong>${top.label}</strong> (+${top.gain} pts).<br><br>${top.action}.<br><br>` +
+        (gaps.length > 1 ? `After that: ${gaps.slice(1).map(g=>`${g.label} (+${g.gain}pts)`).join(" → ")}.` : "");
+    }
+
+    case "next": {
+      if (!crDone) return `Log your creatine first — you need ${(maxServ-S.creatineServings)*5}g. Open the <strong>Supps tab</strong> and tap the button. That's +20 wellness points.`;
+      if (pct < 100) return `Drink <strong>${remaining > 0.5 ? "500ml" : Math.round(remaining*1000)+"ml"}</strong> right now. You're at ${pct}% — ${remaining.toFixed(2)}L short of goal.`;
+      if (!S.workoutDay) return `If you trained today, toggle <strong>"Workout day"</strong> in the Dashboard — that's +10 wellness points.`;
+      return `You've logged everything today 🎉 Wellness at ${ws}/100. Come back tomorrow and keep the streak alive.`;
+    }
+
+    case "plan": {
+      const tasks = [];
+      if (!crDone) tasks.push(`💊 Take ${(maxServ-S.creatineServings)*5}g creatine → Supps tab → +20pts`);
+      if (pct < 100) tasks.push(`💧 Drink ${remaining.toFixed(2)}L water${hoursLeft > 1 ? ` (~${rateNeeded.toFixed(2)}L/hr)` : " before bed"}`);
+      if (!S.workoutDay) tasks.push(`🏋️ Toggle workout day in Dashboard if you trained → +10pts`);
+      tasks.push(`🔥 ${pct>=100&&crDone?"Maintain tomorrow's streak":"Hit today's goal to"} keep your ${str.w}d streak alive`);
+      return `<strong>Your plan right now:</strong><br><br>` +
+        tasks.map((t,i) => `${i+1}. ${t}`).join("<br>") +
+        `<br><br>Score now: <strong>${ws}/100</strong>. ${tasks.length > 2 ? "Start with the top 2." : "Almost done."}`;
+    }
+
+    case "streak": {
+      if (str.w === 0 && str.c === 0) return `No active streaks yet — start today. Hit your water goal and log creatine. Tomorrow you'll be at day 1. Consistency over 7 days is where it becomes automatic.`;
+      return `<strong>Streak check:</strong><br>` +
+        `🔥 Water: <strong>${str.w} days</strong>${str.w>=7?" — elite":str.w>=3?" — momentum building":""}<br>` +
+        `💊 Creatine: <strong>${str.c} days</strong>${str.c>=7?" — muscles saturating nicely":""}<br><br>` +
+        (pct < 100 ? `⚠️ Drink ${remaining.toFixed(2)}L more today to protect your water streak.` : `✅ Streak is safe for today. See you tomorrow.`);
+    }
+
+    case "body": {
+      if (!S.weight) return `I don't have your weight yet. Add it in <strong>Settings</strong> and I'll calculate your exact protein target, water needs, and TDEE.`;
+      return `Based on <strong>${S.weight}${S.weightUnit}</strong> at <strong>${S.activity}</strong> activity:<br><br>` +
+        `• 💪 Protein: ~<strong>${protein}g/day</strong><br>` +
+        `• 💧 Water minimum: <strong>${(kg*0.035).toFixed(1)}L/day</strong>${S.workoutDay ? ` +0.5L workout = ${(kg*0.035+0.5).toFixed(1)}L today` : ""}<br>` +
+        `• 🔥 TDEE estimate: ~<strong>${tdee} kcal/day</strong><br>` +
+        `• ⚡ Creatine saturation: ~<strong>${sat}%</strong><br><br>` +
+        `Creatine + consistent protein + hydration = better muscle retention and performance. Log weight daily in the Supps tab to track body comp trends.`;
+    }
+
+    case "caffeine":
+      return `Caffeine + creatine interaction to know:<br><br>` +
+        `• High caffeine can partially reduce creatine uptake — space them <strong>1+ hour apart</strong><br>` +
+        `• Coffee/tea counts ~80% toward hydration — still log extra water<br>` +
+        `• Best pre-workout timing: 30–45 min before training<br>` +
+        `• Cut off caffeine by 2–3pm for better sleep quality<br><br>` +
+        `You're at ${pct}% hydration — account for caffeine's mild diuretic effect with an extra 250ml.`;
+
+    case "sleep":
+      return `Sleep is where most gains happen:<br><br>` +
+        `• Aim for <strong>7–9 hours</strong> — below 6hrs reduces protein synthesis ~20%<br>` +
+        `• Finish your water goal before bed, but stop 30–60 min before sleeping<br>` +
+        `• Creatine timing doesn't affect sleep — just stay consistent daily<br>` +
+        `• Poor sleep raises cortisol, making hydration goals harder to hit naturally<br><br>` +
+        `You're at ${pct}% hydration today. Properly hydrated = noticeably better sleep.`;
+
+    case "motivation": {
+      if (newUser) return `Every habit starts at zero. The fact you're using Oasis means you're serious. Log water, log creatine, repeat. That's the whole system.`;
+      if (ws >= 80) return `<strong>${ws}/100</strong> wellness, ${str.w}-day streak. That's not luck — that's a system working. Keep showing up.`;
+      const wins = [];
+      if (str.w >= 3) wins.push(`${str.w}-day hydration streak`);
+      if (str.c >= 1) wins.push(`creatine logged ${str.c} day${str.c>1?"s":""} running`);
+      if (pct >= 75) wins.push(`${pct}% of water goal already done`);
+      return wins.length
+        ? `Real wins today: ${wins.join(", ")}. ${remaining > 0 ? `Finish strong — ${remaining.toFixed(2)}L of water left.` : "Goal hit."} 💪`
+        : `Start simple: drink 500ml right now and log it. One action, real momentum.`;
+    }
+
+    case "history": {
+      if (!avgWater) return `You need at least 2 logged days to show trends. Start logging now — in 3 days you'll see your average, consistency, and patterns.`;
+      const hitDays = S.history.slice(-7).filter(d => d.goalMet).length;
+      const crPct = S.history.length > 0 ? Math.round(crDays/S.history.length*100) : 0;
+      return `<strong>Your last 7 days:</strong><br><br>` +
+        `💧 Avg water: <strong>${avgWater}L</strong>/day (goal: ${S.goal}L)<br>` +
+        `🎯 Goal hit: <strong>${hitDays}/7 days</strong><br>` +
+        `💊 Creatine consistency: <strong>${crPct}%</strong> of tracked days<br>` +
+        `🔥 Current streak: ${str.w} days<br><br>` +
+        (parseFloat(avgWater) < S.goal * 0.8 ? `Your average is below goal — try front-loading 500ml first thing every morning.` : `Consistency is solid. Keep the streak going.`);
+    }
+
+    case "apphelp":
+      return `Quick Oasis guide:<br><br>` +
+        `🏠 <strong>Dashboard</strong> — daily water + creatine log, streak, wellness score<br>` +
+        `💧 <strong>Hydration</strong> — detailed drink log with types and amounts<br>` +
+        `💊 <strong>Supps</strong> — creatine, loading phase toggle, weight tracking<br>` +
+        `📊 <strong>Stats</strong> — trends, history, 30-day charts (Pro)<br>` +
+        `⚙️ <strong>Settings</strong> — profile, goal, units, theme, AI Coach API key<br><br>` +
+        `What specifically do you need help with?`;
+
+    case "pro": {
+      const proActive = typeof isPro === "function" && isPro();
+      if (proActive) return `You're on Pro ✅ You have full access to: creatine saturation gauge, body composition, caffeine tracker, sleep tracker, 30-day analytics, and CSV export.`;
+      return `<strong>Oasis Pro unlocks:</strong><br><br>` +
+        `• ⚡ Creatine saturation gauge<br>` +
+        `• 🧪 Body composition calculator<br>` +
+        `• ☕ Caffeine & energy tracker<br>` +
+        `• 😴 Sleep quality tracker<br>` +
+        `• 📊 30-day advanced analytics<br>` +
+        `• 📤 CSV/PDF export<br><br>` +
+        `Tap any locked card to upgrade. $4.99/mo or $39.99/yr (saves 33%).`;
+    }
+
+    case "who":
+      return `I'm <strong>Dima</strong> — your Oasis AI coach. DIMA stands for Daily Intelligence & Metrics Assistant 🤖<br><br>` +
+        `I'm not a doctor or real human. I'm built to help you with hydration, creatine, supplements, body performance, and Oasis itself.<br><br>` +
+        `For medical concerns, always see a healthcare professional. For everything performance-related — ask away.`;
+
+    case "offtopic":
+      return `I'm Dima, your Oasis performance coach — I stick to hydration, creatine, supplements, recovery, and body performance.<br><br>` +
+        `You're at <strong>${pct}%</strong> on water today. Want me to help catch you up, or something else in Oasis?`;
+
+    default:
+      return `Not sure what you mean — I can help with:<br>` +
+        `• Your hydration status and plan<br>` +
+        `• Creatine timing and consistency<br>` +
+        `• Understanding your wellness score<br>` +
+        `• Today's action plan<br>` +
+        `• Supplement advice<br><br>` +
+        `Try: <em>"What should I do right now?"</em>`;
+  }
+}
+
+function dimaEngine(msg) {
+  const ctx = dimaCtx();
+  const intent = dimaIntent(msg);
+  return dimaReply(intent, ctx);
 }
 
 async function sendCoachMessage(text) {
@@ -1008,7 +1269,7 @@ async function sendCoachMessage(text) {
       reply = await callClaudeCoach(text);
     } else {
       await new Promise(r => setTimeout(r, 600 + Math.random() * 400));
-      reply = ruleBasedReply(text);
+      reply = dimaEngine(text);
     }
     removeTyping();
     addChatMsg(reply.replace(/\n/g, "<br>"), "bot");
@@ -1026,7 +1287,7 @@ async function sendCoachMessage(text) {
   }
 }
 
-// Override openCoach with personalized welcome
+// Override openCoach with Dima welcome
 function openCoach() {
   const panel = document.getElementById("coach-panel");
   if (!panel) return;
@@ -1035,19 +1296,22 @@ function openCoach() {
   const msgs = document.getElementById("coach-messages");
   if (msgs && msgs.children.length === 0) {
     chatHistory = [];
-    const ws = calcWellness();
-    const pct = Math.round(total(S) / S.goal * 100);
-    const str = streaks(S.history);
-    const hasKey = !!getApiKey();
-    addChatMsg(
-      `Hey${S.name ? " <strong>" + S.name + "</strong>" : ""}! 👋 I'm your Oasis Coach.<br><br>` +
-      `📊 Today: <strong>${pct}%</strong> hydrated · <strong>${S.creatineServings * 5}g</strong> creatine · Wellness <strong>${ws}/100</strong><br>` +
-      `🔥 Streaks: <strong>${str.w}d</strong> water · <strong>${str.c}d</strong> creatine<br><br>` +
-      (hasKey
-        ? `I'm powered by Claude AI — ask me <em>anything</em> about your health.`
-        : `Smart mode active. Add an Anthropic API key in Settings for full AI.<br><em>Try: "Should I take creatine before or after workout?"</em>`),
-      "bot"
-    );
+    const ctx = dimaCtx();
+    const { pct, str, ws, crDone, remaining, newUser } = ctx;
+    const n = S.name ? ` <strong>${S.name}</strong>` : "";
+    let intro;
+    if (newUser) {
+      intro = `Hey${n}! I'm <strong>Dima</strong>, your Oasis performance coach. 👋<br><br>I analyze your hydration, creatine, and wellness data in real-time to give you personalized coaching.<br><br>Try asking: <em>"What should I do today?"</em>`;
+    } else {
+      intro = `Hey${n}! I'm <strong>Dima</strong> 👋<br><br>` +
+        `💧 <strong>${pct}%</strong> hydrated today (${remaining > 0 ? remaining.toFixed(2)+"L left" : "goal hit ✅"})<br>` +
+        `💊 Creatine: ${crDone ? "✅ Done" : "❌ Not logged yet"}<br>` +
+        `🔥 Streak: ${str.w}d water · ${str.c}d creatine · Score: ${ws}/100<br><br>` +
+        (pct < 50 ? `You're behind on water — ask me to <em>"build my hydration plan."</em>` :
+         !crDone ? `Log creatine when you get a chance — that's 20 pts on your score.` :
+         `Everything's on track. Ask me anything.`);
+    }
+    addChatMsg(intro, "bot");
   }
 }
 
