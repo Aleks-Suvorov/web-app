@@ -1523,6 +1523,61 @@ function setupChatEvents() {
 setupApiKeyEvents();
 setupChatEvents();
 
+// === ONBOARDING (first run) ===
+(function initOnboarding(){
+  const el = document.getElementById("onboarding");
+  if (!el) return;
+  const done = localStorage.getItem("oasis_onboarded");
+  const hasData = S.history.length > 0 || S.waterLogs.length > 0 || S.name;
+  if (done || hasData) return;
+
+  el.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+  let step = 0;
+
+  const show = (i) => {
+    step = i;
+    el.querySelectorAll(".ob-step").forEach(s => s.classList.toggle("active", +s.dataset.step === i));
+    el.querySelectorAll(".ob-dot").forEach((d, di) => d.classList.toggle("active", di === i));
+  };
+
+  const finish = () => {
+    localStorage.setItem("oasis_onboarded", "1");
+    el.classList.add("hidden");
+    document.body.style.overflow = "";
+    updateDash(); updateWater(); loadSettingsUI(); calcWellness();
+    toast(`Welcome${S.name ? ", " + S.name : ""}! Log your first glass 💧`, "success");
+  };
+
+  el.querySelectorAll(".ob-next").forEach(btn => btn.addEventListener("click", () => {
+    if (step === 0) {
+      S.name = document.getElementById("ob-name")?.value.trim() || "";
+      save();
+      show(1);
+    } else if (step === 1) {
+      const w = parseFloat(document.getElementById("ob-weight")?.value);
+      S.weight = (w > 20 && w < 400) ? w : 70;
+      S.weightUnit = document.getElementById("ob-wunit")?.value || "kg";
+      S.activity = document.getElementById("ob-activity")?.value || "moderate";
+      const goal = smartGoal();
+      S.goal = goal;
+      save();
+      const gn = document.getElementById("ob-goal-num");
+      const gw = document.getElementById("ob-goal-why");
+      if (gn) gn.textContent = goal;
+      if (gw) gw.textContent = `Based on ${S.weight}${S.weightUnit} at ${S.activity} activity. You can change this anytime in Settings.`;
+      show(2);
+    }
+  }));
+
+  el.querySelector(".ob-skip")?.addEventListener("click", finish);
+  document.getElementById("ob-finish")?.addEventListener("click", finish);
+
+  el.querySelector("#ob-name")?.addEventListener("keydown", e => {
+    if (e.key === "Enter") el.querySelector('.ob-step[data-step="0"] .ob-next')?.click();
+  });
+})();
+
 // === PWA: service worker + install prompt ===
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {

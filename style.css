@@ -1138,6 +1138,48 @@ body::before{
 .pro-status-line{font-size:var(--text-sm);font-weight:600;color:var(--col-muted);display:flex;align-items:center;gap:var(--sp-2)}
 .pro-status-line.pro-active{color:var(--col-amber)}
 
+/* === ONBOARDING === */
+.ob-overlay{
+  position:fixed;inset:0;z-index:var(--z-top);
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(3,7,18,0.9);
+  backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
+  padding:var(--sp-5);
+  opacity:1;transition:opacity var(--dur-slow) var(--ease-out);
+}
+.ob-overlay.hidden{opacity:0;pointer-events:none;display:none}
+[data-theme="light"] .ob-overlay{background:rgba(238,244,252,0.92)}
+.ob-card{
+  width:100%;max-width:400px;
+  background:var(--glass-bg-strong);
+  border:1px solid var(--glass-border);
+  border-radius:var(--r-xl);
+  padding:var(--sp-8) var(--sp-6);
+  box-shadow:var(--glass-shadow-lg),var(--glass-highlight);
+  text-align:center;
+}
+.ob-dots{display:flex;justify-content:center;gap:var(--sp-2);margin-bottom:var(--sp-5)}
+.ob-dot{width:7px;height:7px;border-radius:var(--r-full);background:rgba(255,255,255,0.15);transition:background var(--dur-base),transform var(--dur-base) var(--ease-spring)}
+.ob-dot.active{background:var(--col-cyan);transform:scale(1.3);box-shadow:0 0 8px rgba(0,212,255,0.6)}
+.ob-step{display:none}
+.ob-step.active{display:block;animation:msg-in var(--dur-enter) var(--ease-spring)}
+.ob-hero{font-size:52px;margin-bottom:var(--sp-3);filter:drop-shadow(0 0 20px rgba(0,212,255,0.4))}
+.ob-title{
+  font-size:var(--text-xl);font-weight:900;margin-bottom:var(--sp-2);
+  background:linear-gradient(135deg,var(--col-cyan),#7dd3fc,var(--col-violet));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.ob-sub{font-size:var(--text-sm);color:var(--col-muted);line-height:1.6;margin-bottom:var(--sp-5)}
+.ob-field{text-align:left;margin-bottom:var(--sp-4)}
+.ob-label{display:block;font-size:var(--text-xs);font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--col-muted);margin-bottom:var(--sp-2)}
+.ob-skip{display:block;width:100%;text-align:center;margin-top:var(--sp-3)}
+.ob-goal{margin:var(--sp-4) 0 var(--sp-2)}
+.ob-goal #ob-goal-num{
+  font-size:var(--text-3xl);font-weight:900;color:var(--col-cyan);
+  filter:drop-shadow(0 0 16px rgba(0,212,255,0.5));
+}
+.ob-goal-unit{font-size:var(--text-md);font-weight:600;color:var(--col-muted);margin-left:var(--sp-2)}
+
 /* === COACH CHAT INPUT === */
 .cp-input-row{
   display:flex;align-items:center;gap:var(--sp-2);
