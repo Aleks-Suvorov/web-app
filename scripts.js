@@ -1115,7 +1115,12 @@ async function callClaudeCoach(userMessage) {
   return reply;
 }
 
-function addChatMsg(html, role = "bot") {
+// Persistent conversation (survives close/reopen and app restarts)
+const CHAT_KEY = "oasis_chat_v1";
+function loadChatLog(){ try { return JSON.parse(localStorage.getItem(CHAT_KEY)) || []; } catch { return []; } }
+function saveChatLog(log){ localStorage.setItem(CHAT_KEY, JSON.stringify(log.slice(-40))); }
+
+function addChatMsg(html, role = "bot", persist = true) {
   const msgs = document.getElementById("coach-messages");
   if (!msgs) return;
   const div = document.createElement("div");
@@ -1123,6 +1128,20 @@ function addChatMsg(html, role = "bot") {
   div.innerHTML = html;
   msgs.appendChild(div);
   msgs.scrollTo({ top: msgs.scrollHeight, behavior: "smooth" });
+  if (persist) {
+    const log = loadChatLog();
+    log.push({ html, role });
+    saveChatLog(log);
+  }
+}
+
+function resetChat(){
+  localStorage.removeItem(CHAT_KEY);
+  chatHistory = [];
+  const msgs = document.getElementById("coach-messages");
+  if (msgs) msgs.innerHTML = "";
+  openCoach(); // regenerates the welcome with fresh data
+  toast("New conversation started","info");
 }
 
 function showTyping() {
@@ -1466,14 +1485,41 @@ async function sendCoachMessage(text) {
   }
 }
 
-// Override openCoach with Dima welcome
+// Dynamic quick chips based on the user's actual state right now
+function renderCoachChips(){
+  const bar = document.querySelector(".cp-actions");
+  if (!bar) return;
+  const ctx = dimaCtx();
+  const chips = [];
+  if (ctx.newUser) chips.push(["🚀 Help me set up Oasis", "How do I use the app?"]);
+  if (ctx.pct < 50 && !ctx.newUser) chips.push(["💧 Catch me up on water", "Build my hydration plan for the rest of today"]);
+  if (!ctx.crDone) chips.push(["💊 Creatine check-in", "Did I take creatine today? Should I take it now?"]);
+  if (ctx.str.w === 0 && S.history.length > 1) chips.push(["🔥 Restart my streak", "My streak broke — how do I restart it?"]);
+  chips.push(["🎯 What should I improve?", "What should I improve today?"]);
+  chips.push(["⭐ Explain my score", "Explain my wellness score"]);
+  if (S.history.length >= 3) chips.push(["📊 Review my week", "Review my week"]);
+  bar.innerHTML = chips.slice(0, 5)
+    .map(([label, q]) => `<button class="cp-action-btn" data-q="${q.replace(/"/g,"&quot;")}">${label}</button>`)
+    .join("");
+  bar.querySelectorAll(".cp-action-btn").forEach(b =>
+    b.addEventListener("click", () => sendCoachMessage(b.dataset.q)));
+}
+
+// Override openCoach with Dima welcome + restored conversation
 function openCoach() {
   const panel = document.getElementById("coach-panel");
   if (!panel) return;
   panel.classList.remove("hidden");
   document.body.style.overflow = "hidden";
+  renderCoachChips();
   const msgs = document.getElementById("coach-messages");
   if (msgs && msgs.children.length === 0) {
+    // Restore saved conversation if present
+    const log = loadChatLog();
+    if (log.length) {
+      log.forEach(m => addChatMsg(m.html, m.role, false));
+      return;
+    }
     chatHistory = [];
     const ctx = dimaCtx();
     const { pct, str, ws, crDone, remaining, newUser } = ctx;
@@ -1532,22 +1578,8 @@ function setupChatEvents() {
   btn?.addEventListener("click", send);
   inp?.addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } });
 
-  const topicMap = {
-    hydration:  "How am I doing on hydration today and what should I do next?",
-    creatine:   "Give me personalized creatine advice based on my current data.",
-    body:       "What are my body composition targets based on my profile?",
-    plan:       "Give me a complete action plan for the rest of today.",
-    motivation: "I need motivation based on my actual progress.",
-  };
-  // Replace old static topic listeners with chat-sending ones
-  document.querySelectorAll(".cp-action-btn").forEach(btn => {
-    const nb = btn.cloneNode(true);
-    btn.parentNode.replaceChild(nb, btn);
-    nb.addEventListener("click", () => {
-      const msg = topicMap[nb.dataset.topic];
-      if (msg) sendCoachMessage(msg);
-    });
-  });
+  // Quick chips are rendered dynamically by renderCoachChips() on open
+  document.getElementById("coach-reset")?.addEventListener("click", resetChat);
 }
 
 setupApiKeyEvents();
