@@ -345,7 +345,7 @@ function updateWater(){
   if(ui&&S.waterLogs.length>0){const l=S.waterLogs[S.waterLogs.length-1];ui.textContent=`Last: ${l.ml}ml ${emoji(l.type)}`;}
   else if(ui)ui.textContent="";
   renderTimeline();
-  if(pct>=1&&!goalHit){goalHit=true;toast("🎉 Hydration goal reached!","success");confetti();}
+  if(pct>=1&&!goalHit){goalHit=true;haptic([15,60,15,60,30]);toast("🎉 Hydration goal reached!","success");confetti();}
   if(pct<1)goalHit=false;
   if(typeof calcWellness==="function")calcWellness();
 }
@@ -361,10 +361,18 @@ function renderTimeline(){
   }).join("");
 }
 
+// Light haptic feedback on log actions (Android; iOS ignores gracefully)
+function haptic(pattern){ try { navigator.vibrate && navigator.vibrate(pattern || 12); } catch {} }
+
+let halfHit=false;
 function logWater(ml){
   S.waterLogs.push({ml,type:drinkType,coeff:drinkCoeff,time:Date.now()});
   save();updateWater();updateDash();checkBadges();
+  haptic(12);
   toast(`+${ml}ml ${emoji(drinkType)} logged`,"info");
+  const pct=total(S)/S.goal;
+  if(pct>=0.5&&pct<1&&!halfHit){halfHit=true;toast("💪 Halfway there — keep sipping!","success");}
+  if(pct<0.5)halfHit=false;
 }
 
 // === CREATINE ===
@@ -394,6 +402,7 @@ function logCreatine(){
   if(S.creatineServings>=maxS)return;
   S.creatineServings++;S.creatineLastTime=Date.now();
   save();updateCreatine();updateDash();checkBadges();
+  haptic([10,40,14]);
   toast("💊 Creatine serving logged!","success");
 }
 
@@ -632,9 +641,29 @@ function scheduleReminder(){
   if(!S.reminders||!("Notification" in window))return;
   const ms=(S.reminderInterval||2)*3600000;
   setTimeout(()=>{
-    if(S.reminders&&total(S)<S.goal)new Notification("💧 Oasis Reminder",{body:"Time to hydrate! You're at "+Math.round(total(S)/S.goal*100)+"% of your goal.",icon:"favicon.png"});
+    if(S.reminders&&total(S)<S.goal){
+      const pct=Math.round(total(S)/S.goal*100);
+      const str=streaks(S.history);
+      const hour=new Date().getHours();
+      let body;
+      if(str.w>=3&&hour>=17) body=`Your ${str.w}-day streak is on the line — ${(S.goal-total(S)).toFixed(1)}L to go.`;
+      else if(pct<25) body=`Slow start today — a quick 500ml gets you moving. You're at ${pct}%.`;
+      else body=`Time to hydrate! You're at ${pct}% of your goal.`;
+      new Notification("💧 Oasis",{body,icon:"favicon.png"});
+    }
     scheduleReminder();
   },ms);
+}
+
+// Welcome-back streak nudge: once per day, if a streak is alive
+function welcomeBack(){
+  const today=new Date().toDateString();
+  if(localStorage.getItem("oasis_wb")===today)return;
+  localStorage.setItem("oasis_wb",today);
+  const str=streaks(S.history);
+  if(str.w>=2&&total(S)===0){
+    setTimeout(()=>toast(`🔥 Day ${str.w+1} — log your first glass to keep the streak`,"info"),1500);
+  }
 }
 
 // === INIT ===
@@ -644,6 +673,7 @@ function init(){
   updateWater();updateCreatine();updateDash();
   renderQuote();renderBadges();checkBadges();renderWeightHistory();
   if(S.reminders)scheduleReminder();
+  welcomeBack();
   go("page-home");
 }
 init();
