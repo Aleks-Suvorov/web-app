@@ -1522,3 +1522,27 @@ function setupChatEvents() {
 
 setupApiKeyEvents();
 setupChatEvents();
+
+// === PWA: service worker + install prompt ===
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch(() => {});
+  });
+}
+
+let deferredInstall = null;
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredInstall = e;
+  // Surface a one-time gentle nudge after the user has actually used the app
+  if (!localStorage.getItem("oasis_install_nudged") && S.history.length >= 1) {
+    localStorage.setItem("oasis_install_nudged", "1");
+    setTimeout(() => {
+      toast("📲 Add Oasis to your home screen for the full experience", "info");
+    }, 3000);
+  }
+});
+window.addEventListener("appinstalled", () => {
+  toast("✅ Oasis installed — see you on the home screen!", "success");
+  deferredInstall = null;
+});
