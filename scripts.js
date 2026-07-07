@@ -648,18 +648,154 @@ function init(){
 }
 init();
 
-// === PRO SYSTEM ===
-const isPro = ()=>localStorage.getItem("oasis_pro")==="true";
-function showUpgrade(){
-  document.getElementById("upgrade-modal")?.classList.remove("hidden");
+// === PRO SYSTEM — licensing, trial, Stripe payment rails ===
+// Fill these in from your Stripe Dashboard → Payment Links.
+// Each link should deliver a license key on the confirmation page/email
+// (Stripe → Payment Link → after payment → show confirmation page with key,
+//  or use Zapier/Make to email a key). Until set, checkout falls back to trial.
+const PAYMENT_CONFIG = {
+  stripeMonthlyUrl: "",                   // e.g. "https://buy.stripe.com/xxxx"
+  stripeYearlyUrl:  "",                   // e.g. "https://buy.stripe.com/yyyy"
+  trialDays: 7,
+  // TODO(backend): point this at a license-verification endpoint
+  // (Cloudflare Worker / Vercel function that checks Stripe subscription status).
+  verifyEndpoint: "",
+};
+
+const PRO_KEY = "oasis_pro_v2";
+
+function getLicense(){
+  try { return JSON.parse(localStorage.getItem(PRO_KEY)) || null; }
+  catch { return null; }
 }
-function activatePro(){
-  localStorage.setItem("oasis_pro","true");
+function setLicense(lic){ localStorage.setItem(PRO_KEY, JSON.stringify(lic)); }
+
+function isPro(){
+  // Legacy flag from v1 — honor it forever (early adopters)
+  if (localStorage.getItem("oasis_pro") === "true") return true;
+  const lic = getLicense();
+  if (!lic) return false;
+  if (lic.plan === "trial" || lic.plan === "monthly" || lic.plan === "yearly") {
+    if (lic.expiresAt && Date.now() > lic.expiresAt) return false;
+    return true;
+  }
+  if (lic.plan === "lifetime") return true;
+  return false;
+}
+
+function proDaysLeft(){
+  const lic = getLicense();
+  if (!lic || !lic.expiresAt) return null;
+  return Math.max(0, Math.ceil((lic.expiresAt - Date.now()) / 86400000));
+}
+
+function startTrial(){
+  const lic = getLicense();
+  if (lic && lic.trialUsed) { toast("Trial already used — choose a plan to continue.","info"); return false; }
+  setLicense({
+    plan: "trial",
+    activatedAt: Date.now(),
+    expiresAt: Date.now() + PAYMENT_CONFIG.trialDays * 86400000,
+    trialUsed: true,
+  });
+  return true;
+}
+
+// License keys: OASIS-XXXX-XXXX-XXXX (checksum-validated locally).
+// TODO(backend): replace local check with a fetch to verifyEndpoint so keys
+// can't be forged. Local check keeps offline activation working as fallback.
+function validateLicenseKey(code){
+  const m = code.trim().toUpperCase().match(/^OASIS-([A-Z0-9]{4})-([A-Z0-9]{4})-([A-Z0-9]{4})$/);
+  if (!m) return false;
+  const body = m[1] + m[2] + m[3].slice(0,3);
+  let sum = 0;
+  for (const ch of body) sum += ch.charCodeAt(0);
+  const expect = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"[sum % 31];
+  return m[3][3] === expect;
+}
+
+// Owner tool: run generateLicenseKey() in the browser console to mint keys
+// to deliver to customers after Stripe checkout (via confirmation page/email).
+function generateLicenseKey(){
+  const chars = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+  const rand = n => Array.from({length:n},()=>chars[Math.floor(Math.random()*chars.length)]).join("");
+  const a = rand(4), b = rand(4), c3 = rand(3);
+  let sum = 0;
+  for (const ch of a+b+c3) sum += ch.charCodeAt(0);
+  return `OASIS-${a}-${b}-${c3}${chars[sum % 31]}`;
+}
+
+function activateLicenseKey(code){
+  if (!validateLicenseKey(code)) return false;
+  const prev = getLicense() || {};
+  setLicense({ ...prev, plan: "lifetime", key: code.trim().toUpperCase(), activatedAt: Date.now(), expiresAt: null });
+  finishActivation("🎉 License activated — welcome to Oasis Pro!");
+  return true;
+}
+
+function activateTrialPlan(){
+  if (!startTrial()) return;
+  finishActivation(`🎉 Pro trial started — ${PAYMENT_CONFIG.trialDays} days of full access!`);
+}
+
+function finishActivation(msg){
   document.getElementById("upgrade-modal")?.classList.add("hidden");
   document.querySelectorAll(".pro-lock-overlay").forEach(o=>o.style.display="none");
-  toast("🎉 Welcome to Oasis Pro! All features unlocked.","success");
+  toast(msg,"success");
   confetti();
   updateCoachFab();
+  renderProStatus();
+}
+
+function showUpgrade(){
+  document.getElementById("upgrade-modal")?.classList.remove("hidden");
+  const cta = document.getElementById("upgrade-btn");
+  if (cta){
+    const yearly = document.getElementById("plan-yearly")?.classList.contains("active-plan");
+    const url = yearly ? PAYMENT_CONFIG.stripeYearlyUrl : PAYMENT_CONFIG.stripeMonthlyUrl;
+    cta.textContent = url ? (yearly ? "Subscribe Yearly — $39.99/yr" : "Subscribe Monthly — $4.99/mo")
+                          : `Start ${PAYMENT_CONFIG.trialDays}-Day Free Trial`;
+  }
+}
+
+function handleUpgradeCta(){
+  const yearly = document.getElementById("plan-yearly")?.classList.contains("active-plan");
+  const url = yearly ? PAYMENT_CONFIG.stripeYearlyUrl : PAYMENT_CONFIG.stripeMonthlyUrl;
+  if (url) {
+    window.open(url, "_blank");   // Stripe-hosted checkout
+    toast("Complete checkout, then enter your license key here.","info");
+    document.getElementById("license-entry")?.classList.remove("hidden");
+  } else {
+    activateTrialPlan();          // no payment link configured yet → trial
+  }
+}
+
+// Trial countdown / plan status in Settings + upgrade modal
+function renderProStatus(){
+  const el = document.getElementById("pro-status-line");
+  if (!el) return;
+  const lic = getLicense();
+  if (isPro()){
+    const days = proDaysLeft();
+    el.innerHTML = lic?.plan === "trial"
+      ? `⏳ Pro trial — <strong>${days} day${days===1?"":"s"} left</strong>`
+      : `👑 Oasis Pro active${lic?.plan && lic.plan!=="lifetime" ? " · "+lic.plan : ""}`;
+    el.className = "pro-status-line pro-active";
+  } else {
+    el.innerHTML = lic?.trialUsed
+      ? `Trial expired — <button class="text-btn" onclick="showUpgrade()">Upgrade to keep Pro</button>`
+      : `Free plan — <button class="text-btn" onclick="showUpgrade()">Try Pro free</button>`;
+    el.className = "pro-status-line";
+  }
+}
+
+// Expiry check on load: if trial lapsed, re-lock features gracefully
+function checkProExpiry(){
+  const lic = getLicense();
+  if (lic?.plan === "trial" && lic.expiresAt && Date.now() > lic.expiresAt && !lic.expiryNotified){
+    setLicense({ ...lic, expiryNotified: true });
+    setTimeout(()=>{ toast("Your Pro trial ended — upgrade to keep your insights.","info"); showUpgrade(); }, 1200);
+  }
 }
 function updateCoachFab(){
   const fab=document.getElementById("coach-fab");
@@ -806,16 +942,27 @@ function proEvents(){
   document.getElementById("upgrade-modal")?.addEventListener("click",e=>{
     if(e.target.id==="upgrade-modal")document.getElementById("upgrade-modal").classList.add("hidden");
   });
-  document.getElementById("upgrade-btn")?.addEventListener("click",activatePro);
+  document.getElementById("upgrade-btn")?.addEventListener("click",handleUpgradeCta);
+  // License key entry
+  document.getElementById("license-toggle")?.addEventListener("click",()=>{
+    document.getElementById("license-entry")?.classList.toggle("hidden");
+    document.getElementById("license-input")?.focus();
+  });
+  document.getElementById("license-activate")?.addEventListener("click",()=>{
+    const code = document.getElementById("license-input")?.value || "";
+    if (!activateLicenseKey(code)) toast("Invalid license key — check for typos.","error");
+  });
+  document.getElementById("license-input")?.addEventListener("keydown",e=>{
+    if (e.key==="Enter") document.getElementById("license-activate")?.click();
+  });
   // Plan selectors
-  document.getElementById("plan-monthly")?.addEventListener("click",()=>{
+  const selectPlan = (id)=>{
     document.querySelectorAll(".plan-card").forEach(p=>p.classList.remove("active-plan"));
-    document.getElementById("plan-monthly").classList.add("active-plan");
-  });
-  document.getElementById("plan-yearly")?.addEventListener("click",()=>{
-    document.querySelectorAll(".plan-card").forEach(p=>p.classList.remove("active-plan"));
-    document.getElementById("plan-yearly").classList.add("active-plan");
-  });
+    document.getElementById(id).classList.add("active-plan");
+    showUpgrade(); // refresh CTA label for selected plan
+  };
+  document.getElementById("plan-monthly")?.addEventListener("click",()=>selectPlan("plan-monthly"));
+  document.getElementById("plan-yearly")?.addEventListener("click",()=>selectPlan("plan-yearly"));
   // Coach FAB
   document.getElementById("coach-fab")?.addEventListener("click",()=>{
     if(!isPro()){showUpgrade();return;}
@@ -841,6 +988,8 @@ proEvents();
 unlockProCards();
 updateCoachFab();
 calcWellness();
+renderProStatus();
+checkProExpiry();
 
 // ── COACH CHAT ENGINE ─────────────────────────────────────────────────────
 let chatHistory = [];

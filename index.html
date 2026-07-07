@@ -559,6 +559,11 @@
     <section id="page-settings" class="page">
       <div class="scroll-wrap">
 
+        <h3 class="section-hdg">Membership</h3>
+        <div class="card">
+          <div id="pro-status-line" class="pro-status-line">Free plan</div>
+        </div>
+
         <h3 class="section-hdg">Profile</h3>
         <div class="card">
           <div class="setting-row"><label class="setting-lbl">Name</label><input id="s-name" type="text" class="text-input" placeholder="Your name"></div>
@@ -735,6 +740,11 @@
         </div>
       </div>
       <button id="upgrade-btn" class="upgrade-cta">Start 7-Day Free Trial</button>
+      <button id="license-toggle" class="text-btn" style="display:block;text-align:center;margin-top:10px;width:100%">Have a license key?</button>
+      <div id="license-entry" class="license-entry hidden">
+        <input id="license-input" type="text" class="modal-input" placeholder="OASIS-XXXX-XXXX-XXXX" autocapitalize="characters" autocomplete="off">
+        <button id="license-activate" class="modal-btn modal-btn-primary">Activate</button>
+      </div>
       <button id="upgrade-cancel" class="text-btn" style="display:block;text-align:center;margin-top:10px;width:100%">Maybe later</button>
     </div>
   </div>

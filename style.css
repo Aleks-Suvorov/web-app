@@ -1131,6 +1131,12 @@ body::before{
   transition:transform var(--dur-fast) var(--ease-spring),box-shadow var(--dur-fast);
 }
 .upgrade-cta:active{transform:scale(.96)}
+.license-entry{display:flex;gap:var(--sp-2);margin-top:var(--sp-3)}
+.license-entry.hidden{display:none}
+.license-entry .modal-input{flex:1;margin:0;text-transform:uppercase;letter-spacing:1px;font-size:var(--text-sm)}
+.license-entry .modal-btn{flex-shrink:0;width:auto;padding:0 var(--sp-4)}
+.pro-status-line{font-size:var(--text-sm);font-weight:600;color:var(--col-muted);display:flex;align-items:center;gap:var(--sp-2)}
+.pro-status-line.pro-active{color:var(--col-amber)}
 
 /* === COACH CHAT INPUT === */
 .cp-input-row{
